@@ -41,9 +41,10 @@ const dialogKicker = document.getElementById('dialog-kicker')!;
 const dialogTitle = document.getElementById('dialog-title')!;
 const dialogDescription = document.getElementById('dialog-description')!;
 const actionButton = document.getElementById('action-button') as HTMLButtonElement;
-let dialogMode: 'intro' | 'paused' | 'won' | 'lost' = 'intro';
+type DialogMode = 'intro' | 'paused' | 'won' | 'lost';
+let dialogMode: DialogMode = 'intro';
 
-interface DialogData { mode: typeof dialogMode; icon: string; kicker: string; title: string; description: string; button: string }
+interface DialogData { mode: DialogMode; icon: string; kicker: string; title: string; description: string; button: string }
 function showDialog(data: DialogData): void {
   dialogMode = data.mode;
   dialogIcon.textContent = data.icon;
