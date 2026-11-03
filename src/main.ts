@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { KitchenScene, releaseVirtualControls, setVirtualControl } from './game/KitchenScene';
 import './style.css';
+import './mobile-controls.css';
 
 // A visible diagnostic replaces the confusing all-pink screen if setup fails.
 const startupError = document.getElementById('startup-error')!;
@@ -22,16 +23,18 @@ window.setTimeout(() => {
 }, 8000);
 
 const scene = new KitchenScene();
+const gameContainer = document.getElementById('game')!;
 const game = new Phaser.Game({
   // Canvas is more reliable for our simple 2D art on older / restricted GPUs.
   type: Phaser.CANVAS,
   parent: 'game',
-  width: 1100,
-  height: 680,
+  width: Math.max(320, gameContainer.clientWidth),
+  height: Math.max(280, gameContainer.clientHeight),
   backgroundColor: '#ffe5d7',
   render: { antialias: true, pixelArt: false },
   physics: { default: 'arcade', arcade: { debug: false, gravity: { x: 0, y: 1120 } } },
-  scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
+  // Resize the world to fit a phone screen rather than shrinking the entire desktop room.
+  scale: { mode: Phaser.Scale.RESIZE, autoCenter: Phaser.Scale.NO_CENTER },
   scene: [scene],
 });
 
@@ -41,6 +44,7 @@ const dialogKicker = document.getElementById('dialog-kicker')!;
 const dialogTitle = document.getElementById('dialog-title')!;
 const dialogDescription = document.getElementById('dialog-description')!;
 const actionButton = document.getElementById('action-button') as HTMLButtonElement;
+const restartDialogButton = document.getElementById('restart-dialog-btn') as HTMLButtonElement;
 type DialogMode = 'intro' | 'paused' | 'won' | 'lost';
 let dialogMode: DialogMode = 'intro';
 
@@ -52,8 +56,9 @@ function showDialog(data: DialogData): void {
   dialogTitle.textContent = data.title;
   dialogDescription.textContent = data.description;
   actionButton.textContent = data.button;
+  restartDialogButton.hidden = data.mode !== 'paused';
   dialog.classList.remove('is-hidden');
-  if (data.mode !== 'intro' && data.mode !== 'paused') releaseVirtualControls();
+  if (data.mode !== 'intro' && data.mode !== 'paused') resetAllControls();
 }
 function hideDialog(): void { dialog.classList.add('is-hidden'); }
 function currentScene(): KitchenScene { return game.scene.getScene('KitchenScene') as KitchenScene; }
@@ -78,7 +83,7 @@ function pauseToggle(): void {
 }
 
 function restart(): void {
-  releaseVirtualControls();
+  resetAllControls();
   // Clear any button that was still held when the previous round ended.
   document.querySelectorAll<HTMLButtonElement>('[data-hold]').forEach((button) => {
     button.classList.remove('pressed');
@@ -102,45 +107,87 @@ actionButton.addEventListener('click', () => {
 });
 
 document.getElementById('pause-btn')!.addEventListener('click', pauseToggle);
+document.getElementById('pause-mobile-btn')!.addEventListener('click', pauseToggle);
+restartDialogButton.addEventListener('click', restart);
 document.getElementById('restart-btn')!.addEventListener('click', restart);
 
 document.getElementById('how-to-btn')!.addEventListener('click', () => {
   document.getElementById('instructions')!.scrollIntoView({ behavior: 'smooth', block: 'center' });
 });
 
-// Optional touch / mouse on-screen controls; normal keyboard controls work on desktop.
+// Multi-touch: each pointer is independent; movement + jumping/boost work together.
+const heldControls: Array<() => void> = [];
+const gameIsActive = (): boolean => dialog.classList.contains('is-hidden');
 for (const button of document.querySelectorAll<HTMLButtonElement>('[data-hold]')) {
   const control = button.dataset.hold as 'left' | 'right' | 'up' | 'boost';
-  const press = (event: PointerEvent) => {
-    event.preventDefault();
-    button.setPointerCapture(event.pointerId);
-    setVirtualControl(control, true);
-    button.classList.add('pressed');
-  };
-  const release = (event: PointerEvent) => {
-    event.preventDefault();
+  const pointers = new Set<number>();
+  const reset = () => {
+    pointers.clear();
     setVirtualControl(control, false);
     button.classList.remove('pressed');
   };
-  button.addEventListener('pointerdown', press);
+  heldControls.push(reset);
+  button.addEventListener('pointerdown', (event: PointerEvent) => {
+    if (!gameIsActive()) return;
+    event.preventDefault();
+    try { button.setPointerCapture(event.pointerId); } catch { /* capture unavailable */ }
+    pointers.add(event.pointerId);
+    setVirtualControl(control, true);
+    button.classList.add('pressed');
+  });
+  const release = (event: PointerEvent) => {
+    event.preventDefault();
+    pointers.delete(event.pointerId);
+    const held = pointers.size > 0;
+    setVirtualControl(control, held);
+    button.classList.toggle('pressed', held);
+  };
   button.addEventListener('pointerup', release);
   button.addEventListener('pointercancel', release);
-  button.addEventListener('lostpointercapture', () => { setVirtualControl(control, false); button.classList.remove('pressed'); });
+  button.addEventListener('lostpointercapture', release);
 }
 for (const button of document.querySelectorAll<HTMLButtonElement>('[data-tap]')) {
-  button.addEventListener('click', () => {
-    if (!dialog.classList.contains('is-hidden')) return;
-    const s = currentScene();
-    const action = button.dataset.tap;
-    if (action === 'jump') s.virtualJump();
-    else if (action === 'interact') s.virtualInteract();
-    else if (action === 'hide') s.virtualHide();
+  const act = () => {
+    if (!gameIsActive()) return;
+    const scene = currentScene();
+    switch (button.dataset.tap) {
+      case 'jump': scene.virtualJump(); break;
+      case 'interact': scene.virtualInteract(); break;
+      case 'hide': scene.virtualHide(); break;
+    }
+  };
+  button.addEventListener('pointerdown', (event: PointerEvent) => {
+    event.preventDefault();
+    try { button.setPointerCapture(event.pointerId); } catch { /* capture unavailable */ }
+    button.classList.add('pressed');
+    act();
   });
+  for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) {
+    button.addEventListener(type, () => button.classList.remove('pressed'));
+  }
+  // Pointerdown prevents synthetic clicks; keep keyboard activation.
+  button.addEventListener('click', (event: MouseEvent) => { if (event.detail === 0) act(); });
 }
 
+const fullscreenButton = document.getElementById('fullscreen-btn') as HTMLButtonElement;
+const fullscreenTarget = document.getElementById('game-shell')!;
+if (!document.fullscreenEnabled || !fullscreenTarget.requestFullscreen) fullscreenButton.hidden = true;
+fullscreenButton.addEventListener('click', async () => {
+  try {
+    if (document.fullscreenElement) await document.exitFullscreen();
+    else await fullscreenTarget.requestFullscreen();
+  } catch (error) { console.info('Fullscreen unavailable:', error); }
+});
+const mobileHint = document.getElementById('rotate-tip');
+document.getElementById('dismiss-rotate-tip')?.addEventListener('click', () => mobileHint?.classList.add('is-dismissed'));
+function resetAllControls(): void {
+  heldControls.forEach(reset => reset());
+  releaseVirtualControls();
+}
 // Prevent arrows / Space from scrolling the page during gameplay.
 window.addEventListener('keydown', (event) => {
   if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space', ' '].includes(event.key) &&
       dialog.classList.contains('is-hidden')) event.preventDefault();
 }, { passive: false });
-window.addEventListener('blur', releaseVirtualControls);
+window.addEventListener('blur', resetAllControls);
+document.addEventListener('visibilitychange', () => { if (document.hidden) resetAllControls(); });

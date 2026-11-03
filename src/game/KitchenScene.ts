@@ -74,6 +74,7 @@ export class KitchenScene extends Phaser.Scene {
   private notice!: Phaser.GameObjects.Text;
   private prompt!: Phaser.GameObjects.Text;
   private animClock = 0;
+  private touchMode = false;
   private climbZones: ClimbZone[] = [
     { x: 148, top: 401, bottom: 607 },
     { x: 558, top: 401, bottom: 607 },
@@ -129,6 +130,8 @@ export class KitchenScene extends Phaser.Scene {
 
   create(): void {
     this.resetRunState();
+    // Extend the floor color when the landscape camera pans below the artwork.
+    this.add.rectangle(800, 790, 1600, 230, 0xecc79d).setDepth(-11);
     this.add.image(0, 0, 'room').setOrigin(0, 0).setDepth(-10);
     this.physics.world.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
     this.cameras.main.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
@@ -165,7 +168,9 @@ export class KitchenScene extends Phaser.Scene {
 
     this.keys = this.input.keyboard!.addKeys('W,A,S,D,UP,DOWN,LEFT,RIGHT,SPACE,SHIFT,E,ESC') as Record<string, Phaser.Input.Keyboard.Key>;
     this.cameras.main.startFollow(this.rat, false, 0.09, 0.1);
-    this.cameras.main.setDeadzone(120, 100);
+    this.configureCamera();
+    this.scale.on('resize', this.configureCamera, this);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.scale.off('resize', this.configureCamera, this));
     this.input.keyboard!.on('keydown-ESC', () => gameEvent('pause-request'));
     this.input.keyboard!.on('keydown-E', () => { if (this.started && !this.finished) this.interact(); });
     this.input.keyboard!.on('keydown-S', () => { if (this.started && !this.finished) this.toggleHide(); });
@@ -175,6 +180,22 @@ export class KitchenScene extends Phaser.Scene {
     this.refreshHUD();
     gameEvent('ready');
     // The Scene has created every critical gameplay object at this point.
+  }
+
+  /** Zoom in on the rat and keep the game view useful on narrow phone screens. */
+  private configureCamera(): void {
+    const width = this.scale.width;
+    const height = this.scale.height;
+    this.touchMode = window.matchMedia('(pointer: coarse)').matches;
+    const portrait = this.touchMode && height > width;
+    const landscapePhone = this.touchMode && !portrait;
+    const zoom = portrait ? Math.min(width / 450, height / 600)
+      : landscapePhone ? Math.min(width / 900, height / 500)
+      : Math.min(width / 1100, height / 680);
+    const camera = this.cameras.main;
+    camera.setZoom(Phaser.Math.Clamp(zoom, 0.48, 1.6));
+    camera.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT + (landscapePhone ? 165 : 0));
+    camera.setDeadzone(portrait ? 40 : 120, portrait ? 70 : 95);
   }
 
   startPlaying(): void {
@@ -247,7 +268,7 @@ export class KitchenScene extends Phaser.Scene {
     if (boosting) this.energy = Math.max(0, this.energy - 32 * dt);
 
     const climbing = upward && this.climbZones.some(zone =>
-      Math.abs(this.rat.x - zone.x) < 35 && this.rat.y > zone.top - 60 && this.rat.y < zone.bottom + 8
+      Math.abs(this.rat.x - zone.x) < (this.touchMode ? 57 : 35) && this.rat.y > zone.top - 60 && this.rat.y < zone.bottom + 8
     );
     if (climbing) {
       body.setAllowGravity(false);
@@ -296,7 +317,7 @@ export class KitchenScene extends Phaser.Scene {
       return;
     }
     const item = this.nearestFood();
-    if (!item || Phaser.Math.Distance.Between(this.rat.x, this.rat.y, item.sprite.x, item.sprite.y) > 83) {
+    if (!item || Phaser.Math.Distance.Between(this.rat.x, this.rat.y, item.sprite.x, item.sprite.y) > (this.touchMode ? 115 : 83)) {
       this.flash(this.carriedFood ? 'Take that food HOME!' : 'Get closer to some food!');
       return;
     }
@@ -343,7 +364,7 @@ export class KitchenScene extends Phaser.Scene {
 
   private canChefSeeRat(): boolean {
     const dist = Math.abs(this.chef.x - this.rat.x);
-    if (this.hidden || dist > 235 || this.rat.y < 459) return false;
+    if (this.hidden || dist > (this.touchMode ? 208 : 235) || this.rat.y < 459) return false;
     // The first prototype uses short-range detection, not full pathfinding or raycasts.
     return true;
   }
@@ -369,7 +390,7 @@ export class KitchenScene extends Phaser.Scene {
 
     let target = this.chef.x;
     let speed = 0;
-    if (this.chefMode === 'chase') { target = this.lastSeenX; speed = 205; }
+    if (this.chefMode === 'chase') { target = this.lastSeenX; speed = this.touchMode ? 175 : 205; }
     else if (this.chefMode === 'search') { target = this.lastSeenX; speed = 72; }
     else { target = 380 + Math.sin(this.patrolClock * 0.7) * 280; speed = 92; }
     const dx = target - this.chef.x;
@@ -393,9 +414,9 @@ export class KitchenScene extends Phaser.Scene {
       message = this.carriedFood ? 'E · Deliver food' : 'S · Hide at HOME';
     } else {
       const item = this.nearestFood();
-      if (item && Phaser.Math.Distance.Between(this.rat.x, this.rat.y, item.sprite.x, item.sprite.y) < 83) {
+      if (item && Phaser.Math.Distance.Between(this.rat.x, this.rat.y, item.sprite.x, item.sprite.y) < (this.touchMode ? 115 : 83)) {
         message = this.carriedFood ? 'Go home to deliver!' : this.energy >= 99.9 ? 'E · Steal this food!' : `E · Eat (+${item.energy})`;
-      } else if (this.climbZones.some(z => Math.abs(this.rat.x-z.x)<42 && this.rat.y>z.top+5)) {
+      } else if (this.climbZones.some(z => Math.abs(this.rat.x-z.x)<(this.touchMode ? 64 : 42) && this.rat.y>z.top+5)) {
         message = 'W / ↑ · Climb';
       }
     }
@@ -413,6 +434,11 @@ export class KitchenScene extends Phaser.Scene {
     updateText('energy-label', `${Math.ceil(this.energy)}%`);
     updateText('delivered-label', `${this.delivered}/${GOAL}`);
     updateText('carrying-label', this.carriedFood ? FOOD_DATA[this.carriedFood].label : 'Nothing');
+    updateText('touch-hide-label', this.hidden ? 'UNHIDE' : 'HIDE');
+    const atHome = Math.abs(this.rat.x - 1510) < 95 && this.rat.y > 475;
+    const nearby = this.nearestFood();
+    const canEat = nearby && Phaser.Math.Distance.Between(this.rat.x, this.rat.y, nearby.sprite.x, nearby.sprite.y) < (this.touchMode ? 115 : 83);
+    updateText('touch-interact-label', this.hidden ? 'COME OUT' : atHome ? (this.carriedFood ? 'DELIVER' : 'ENTER') : this.carriedFood ? 'GO HOME' : canEat ? (this.energy >= 99.9 ? 'STEAL' : 'EAT') : 'EAT / PICK');
     updateText('status-label', this.hidden ? `HIDDEN · ${this.hidingSpot.toUpperCase()}` : this.chefMode === 'chase' ? 'CHEF IS CHASING!' : this.chefMode === 'search' ? 'CHEF IS SEARCHING' : 'STEAL SOMETHING!');
     updateBar('energy-fill', this.energy);
     updateBar('suspicion-fill', this.suspicion);
