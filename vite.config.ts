@@ -1,7 +1,8 @@
 import { defineConfig } from 'vite';
 
-// Relative paths work both at a GitHub Pages project URL and on a custom domain.
+// Relative paths work on Cloudflare or at a nested GitHub Pages URL.
 export default defineConfig({
   base: './',
+  plugins: [],
   build: { target: 'es2022', outDir: 'dist' },
 });
