@@ -1,0 +1,20 @@
+{
+  "name": "rat-game",
+  "private": true,
+  "version": "0.2.1",
+  "description": "A very serious game about a very round rat stealing very serious pastries.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "phaser": "^3.90.0"
+  },
+  "devDependencies": {
+    "typescript": "~5.8.3",
+    "vite": "^7.1.0"
+  }
+}
