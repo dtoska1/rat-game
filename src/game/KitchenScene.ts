@@ -43,7 +43,10 @@ function updateText(id: string, value: string): void {
 }
 function updateBar(id: string, value: number): void {
   const el = document.getElementById(id);
-  if (el) el.style.width = `${Phaser.Math.Clamp(value, 0, 100)}%`;
+  if (el) {
+    const next = `${Math.round(Phaser.Math.Clamp(value, 0, 100))}%`;
+    if (el.style.width !== next) el.style.width = next;
+  }
 }
 function gameEvent(name: string, data?: Record<string, unknown>): void {
   window.dispatchEvent(new CustomEvent(`ratgame:${name}`, { detail: data }));
@@ -75,6 +78,8 @@ export class KitchenScene extends Phaser.Scene {
   private prompt!: Phaser.GameObjects.Text;
   private animClock = 0;
   private touchMode = false;
+  private autoClimbZone: ClimbZone | null = null;
+  private hudElapsed = 0;
   private climbZones: ClimbZone[] = [
     { x: 148, top: 401, bottom: 607 },
     { x: 558, top: 401, bottom: 607 },
@@ -95,7 +100,8 @@ export class KitchenScene extends Phaser.Scene {
     this.foods = [];
     this.carriedFood = null;
     this.heldIcon = null;
-    this.energy = 47;
+    this.touchMode = window.matchMedia('(pointer: coarse)').matches;
+    this.energy = this.touchMode ? 65 : 47;
     this.delivered = 0;
     this.hidden = false;
     this.hidingSpot = '';
@@ -110,6 +116,8 @@ export class KitchenScene extends Phaser.Scene {
     this.suspicion = 0;
     this.noticeTime = 0;
     this.animClock = 0;
+    this.autoClimbZone = null;
+    this.hudElapsed = 0;
     releaseVirtualControls();
   }
 
@@ -167,7 +175,7 @@ export class KitchenScene extends Phaser.Scene {
     }).setOrigin(0.5).setDepth(40).setVisible(false);
 
     this.keys = this.input.keyboard!.addKeys('W,A,S,D,UP,DOWN,LEFT,RIGHT,SPACE,SHIFT,E,ESC') as Record<string, Phaser.Input.Keyboard.Key>;
-    this.cameras.main.startFollow(this.rat, false, 0.09, 0.1);
+    this.cameras.main.startFollow(this.rat, false, this.touchMode ? 0.20 : 0.09, this.touchMode ? 0.18 : 0.1);
     this.configureCamera();
     this.scale.on('resize', this.configureCamera, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.scale.off('resize', this.configureCamera, this));
@@ -208,6 +216,26 @@ export class KitchenScene extends Phaser.Scene {
   virtualInteract(): void { if (this.started && !this.finished) this.interact(); }
   virtualHide(): void { if (this.started && !this.finished) this.toggleHide(); }
   virtualJump(): void { if (this.started && !this.finished) this.jump(); }
+
+  // On touchscreens, a single tap climbs the nearest table leg or ladder.
+  virtualClimb(): void {
+    if (!this.started || this.finished || this.hidden) return;
+    let nearest: ClimbZone | null = null;
+    let closest = Infinity;
+    for (const zone of this.climbZones) {
+      const distance = Math.abs(this.rat.x - zone.x);
+      if (distance < 118 && distance < closest &&
+          this.rat.y > zone.top - 60 && this.rat.y < zone.bottom + 25) {
+        nearest = zone;
+        closest = distance;
+      }
+    }
+    if (!nearest) {
+      this.flash('Move near a table leg, then CLIMB! 🐀');
+      return;
+    }
+    this.autoClimbZone = nearest;
+  }
 
   private makeSurface(x: number, y: number, width: number, height: number): void {
     const rect = this.add.rectangle(x, y, width, height, 0xff0000, 0);
@@ -252,8 +280,18 @@ export class KitchenScene extends Phaser.Scene {
     else this.rat.setVelocity(0, 0);
     this.moveChef(dt);
     this.positionCarriedFood();
-    this.showNearbyPrompt();
-    this.refreshHUD();
+
+    // Deliver automatically on phones: no tiny button needed after a long escape.
+    if (this.touchMode && !this.hidden && this.carriedFood &&
+        Math.abs(this.rat.x - 1510) < 90 && this.rat.y > 475) this.interact();
+
+    // Updating HTML HUD every animation frame caused unnecessary mobile reflows.
+    this.hudElapsed += delta;
+    if (this.hudElapsed >= 100) {
+      this.hudElapsed = 0;
+      this.showNearbyPrompt();
+      this.refreshHUD();
+    }
   }
 
   private moveRat(dt: number): void {
@@ -263,9 +301,29 @@ export class KitchenScene extends Phaser.Scene {
     const upward = this.keys.W.isDown || this.keys.UP.isDown || VIRTUAL.up;
     const direction = Number(right) - Number(left);
     const boosting = (this.keys.SHIFT.isDown || VIRTUAL.boost) && this.energy > 0 && direction !== 0;
-    let speed = boosting ? 335 : 188;
+    let speed = boosting ? (this.touchMode ? 375 : 335) : (this.touchMode ? 218 : 188);
     if (this.carriedFood) speed *= 0.78;
     if (boosting) this.energy = Math.max(0, this.energy - 32 * dt);
+
+    if (this.autoClimbZone) {
+      const zone = this.autoClimbZone;
+      const dx = zone.x - this.rat.x;
+      if (Math.abs(dx) > 6) {
+        body.setAllowGravity(true);
+        this.rat.setVelocityX(Math.sign(dx) * Math.min(270, Math.abs(dx) / Math.max(dt, 0.01)));
+      } else {
+        this.rat.setX(zone.x);
+        body.setAllowGravity(false);
+        this.rat.setVelocityX(0);
+        this.rat.setVelocityY(-250);
+        if (this.rat.y <= zone.top - 64) {
+          this.autoClimbZone = null;
+          body.setAllowGravity(true);
+          this.rat.setVelocityY(-35);
+        }
+      }
+      return;
+    }
 
     const climbing = upward && this.climbZones.some(zone =>
       Math.abs(this.rat.x - zone.x) < (this.touchMode ? 57 : 35) && this.rat.y > zone.top - 60 && this.rat.y < zone.bottom + 8
@@ -288,6 +346,7 @@ export class KitchenScene extends Phaser.Scene {
 
   private jump(): void {
     if (this.hidden) return;
+    this.autoClimbZone = null;
     const body = this.rat.body as Phaser.Physics.Arcade.Body;
     if (body.blocked.down || body.touching.down) {
       body.setAllowGravity(true);
@@ -297,10 +356,20 @@ export class KitchenScene extends Phaser.Scene {
   }
 
   private nearestFood(): FoodItem | undefined {
-    return this.foods.filter(f => !f.consumed).sort((a, b) =>
-      Phaser.Math.Distance.Between(this.rat.x, this.rat.y, a.sprite.x, a.sprite.y) -
-      Phaser.Math.Distance.Between(this.rat.x, this.rat.y, b.sprite.x, b.sprite.y)
-    )[0];
+    let nearest: FoodItem | undefined;
+    let bestDistanceSq = Infinity;
+    // No per-frame array allocations or sorting.
+    for (const food of this.foods) {
+      if (food.consumed) continue;
+      const dx = this.rat.x - food.sprite.x;
+      const dy = this.rat.y - food.sprite.y;
+      const distanceSq = dx * dx + dy * dy;
+      if (distanceSq < bestDistanceSq) {
+        nearest = food;
+        bestDistanceSq = distanceSq;
+      }
+    }
+    return nearest;
   }
 
   private interact(): void {
@@ -317,7 +386,7 @@ export class KitchenScene extends Phaser.Scene {
       return;
     }
     const item = this.nearestFood();
-    if (!item || Phaser.Math.Distance.Between(this.rat.x, this.rat.y, item.sprite.x, item.sprite.y) > (this.touchMode ? 115 : 83)) {
+    if (!item || Phaser.Math.Distance.Between(this.rat.x, this.rat.y, item.sprite.x, item.sprite.y) > (this.touchMode ? 135 : 83)) {
       this.flash(this.carriedFood ? 'Take that food HOME!' : 'Get closer to some food!');
       return;
     }
@@ -356,6 +425,7 @@ export class KitchenScene extends Phaser.Scene {
     const safe = zones.find(([x, r]) => Math.abs(this.rat.x - x) < r && this.rat.y > 478);
     if (!safe) { this.flash('No hiding spot here!'); return; }
     this.hidden = true;
+    this.autoClimbZone = null;
     this.hidingSpot = safe[2];
     this.rat.setVelocity(0, 0);
     this.rat.setAlpha(safe[2] === 'rat hole' ? 0.2 : 0.38);
@@ -364,7 +434,7 @@ export class KitchenScene extends Phaser.Scene {
 
   private canChefSeeRat(): boolean {
     const dist = Math.abs(this.chef.x - this.rat.x);
-    if (this.hidden || dist > (this.touchMode ? 208 : 235) || this.rat.y < 459) return false;
+    if (this.hidden || dist > (this.touchMode ? 170 : 235) || this.rat.y < 459) return false;
     // The first prototype uses short-range detection, not full pathfinding or raycasts.
     return true;
   }
@@ -390,7 +460,7 @@ export class KitchenScene extends Phaser.Scene {
 
     let target = this.chef.x;
     let speed = 0;
-    if (this.chefMode === 'chase') { target = this.lastSeenX; speed = this.touchMode ? 175 : 205; }
+    if (this.chefMode === 'chase') { target = this.lastSeenX; speed = this.touchMode ? 145 : 205; }
     else if (this.chefMode === 'search') { target = this.lastSeenX; speed = 72; }
     else { target = 380 + Math.sin(this.patrolClock * 0.7) * 280; speed = 92; }
     const dx = target - this.chef.x;
@@ -402,7 +472,7 @@ export class KitchenScene extends Phaser.Scene {
     this.chef.setY(532 + Math.abs(Math.sin(this.animClock * (this.chefMode === 'chase' ? 19 : 8))) * 3);
     this.chef.setTint(this.chefMode === 'chase' ? 0xffc7c9 : 0xffffff);
 
-    if (!this.hidden && this.chefMode === 'chase' && Math.abs(this.rat.x - this.chef.x) < 57 && this.rat.y > 485) {
+    if (!this.hidden && this.chefMode === 'chase' && Math.abs(this.rat.x - this.chef.x) < (this.touchMode ? 45 : 57) && this.rat.y > 485) {
       this.finish(false);
     }
   }
@@ -414,10 +484,10 @@ export class KitchenScene extends Phaser.Scene {
       message = this.carriedFood ? 'E · Deliver food' : 'S · Hide at HOME';
     } else {
       const item = this.nearestFood();
-      if (item && Phaser.Math.Distance.Between(this.rat.x, this.rat.y, item.sprite.x, item.sprite.y) < (this.touchMode ? 115 : 83)) {
+      if (item && Phaser.Math.Distance.Between(this.rat.x, this.rat.y, item.sprite.x, item.sprite.y) < (this.touchMode ? 135 : 83)) {
         message = this.carriedFood ? 'Go home to deliver!' : this.energy >= 99.9 ? 'E · Steal this food!' : `E · Eat (+${item.energy})`;
       } else if (this.climbZones.some(z => Math.abs(this.rat.x-z.x)<(this.touchMode ? 64 : 42) && this.rat.y>z.top+5)) {
-        message = 'W / ↑ · Climb';
+        message = this.touchMode ? 'Tap CLIMB 🐀' : 'W / ↑ · Climb';
       }
     }
     this.prompt.setVisible(message.length > 0);
@@ -437,7 +507,7 @@ export class KitchenScene extends Phaser.Scene {
     updateText('touch-hide-label', this.hidden ? 'UNHIDE' : 'HIDE');
     const atHome = Math.abs(this.rat.x - 1510) < 95 && this.rat.y > 475;
     const nearby = this.nearestFood();
-    const canEat = nearby && Phaser.Math.Distance.Between(this.rat.x, this.rat.y, nearby.sprite.x, nearby.sprite.y) < (this.touchMode ? 115 : 83);
+    const canEat = nearby && Phaser.Math.Distance.Between(this.rat.x, this.rat.y, nearby.sprite.x, nearby.sprite.y) < (this.touchMode ? 135 : 83);
     updateText('touch-interact-label', this.hidden ? 'COME OUT' : atHome ? (this.carriedFood ? 'DELIVER' : 'ENTER') : this.carriedFood ? 'GO HOME' : canEat ? (this.energy >= 99.9 ? 'STEAL' : 'EAT') : 'EAT / PICK');
     updateText('status-label', this.hidden ? `HIDDEN · ${this.hidingSpot.toUpperCase()}` : this.chefMode === 'chase' ? 'CHEF IS CHASING!' : this.chefMode === 'search' ? 'CHEF IS SEARCHING' : 'STEAL SOMETHING!');
     updateBar('energy-fill', this.energy);

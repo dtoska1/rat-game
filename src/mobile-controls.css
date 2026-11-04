@@ -83,3 +83,16 @@
   .status-strip{top:47px}
   .dialog-icon{font-size:23px}
 }
+
+/* Rat Game v0.4 — larger, more forgiving thumb targets. */
+@media (pointer:coarse) and (orientation:portrait){
+  :root{--move-size:clamp(58px,16vw,76px);--action-size:clamp(68px,19vw,90px)}
+  .touch-controls{gap:6px}
+  .touch-movement{row-gap:7px}
+  .touch-controls button{border-radius:18px;font-size:clamp(17px,4vw,23px)}
+  .touch-jump{font-size:clamp(14px,3vw,18px)!important}
+}
+@media (pointer:coarse) and (orientation:landscape){
+  :root{--move-size:clamp(52px,14.5dvh,70px);--action-size:clamp(60px,17dvh,82px)}
+  .touch-controls button{background:#f6d9eddc}
+}

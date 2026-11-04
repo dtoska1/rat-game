@@ -23,10 +23,12 @@ window.setTimeout(() => {
 }, 8000);
 
 const scene = new KitchenScene();
+const useCanvas = new URLSearchParams(window.location.search).get('renderer') === 'canvas';
 const gameContainer = document.getElementById('game')!;
 const game = new Phaser.Game({
-  // Canvas is more reliable for our simple 2D art on older / restricted GPUs.
-  type: Phaser.CANVAS,
+  // WebGL accelerates rendering on mobile; Phaser falls back to Canvas when unavailable.
+  // Add ?renderer=canvas to the URL if a particular device has WebGL trouble.
+  type: useCanvas ? Phaser.CANVAS : Phaser.AUTO,
   parent: 'game',
   width: Math.max(320, gameContainer.clientWidth),
   height: Math.max(280, gameContainer.clientHeight),
@@ -152,6 +154,7 @@ for (const button of document.querySelectorAll<HTMLButtonElement>('[data-tap]'))
     const scene = currentScene();
     switch (button.dataset.tap) {
       case 'jump': scene.virtualJump(); break;
+      case 'climb': scene.virtualClimb(); break;
       case 'interact': scene.virtualInteract(); break;
       case 'hide': scene.virtualHide(); break;
     }
