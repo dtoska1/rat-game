@@ -15,6 +15,10 @@ jobs:
   play-mobile:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        renderer: [auto, canvas]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -25,10 +29,12 @@ jobs:
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
       - name: Test actual live game with touch controls
+        env:
+          TARGET_URL: https://rat-game.dion-tosk.workers.dev/?renderer=${{ matrix.renderer }}
         run: node tests/mobile-live.mjs
       - name: Save screenshots and frame-time report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: rat-game-mobile-playtest
+          name: rat-game-mobile-playtest-${{ matrix.renderer }}
           path: test-results/

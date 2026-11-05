@@ -31,6 +31,12 @@ try {
   report.http = response?.status();
   await page.waitForSelector('#game canvas', { timeout: 25000 });
   await page.waitForTimeout(1800);
+  report.renderer = await page.evaluate(() => {
+    const canvas = document.querySelector('#game canvas');
+    if (!canvas) return 'missing';
+    try { return canvas.getContext('2d') ? 'Canvas2D' : 'WebGL'; }
+    catch { return 'unavailable'; }
+  });
   await event('loaded');
   await page.screenshot({ path: 'test-results/mobile-before-start.png', fullPage: false });
   await page.locator('#action-button').click({ timeout: 10000 });
