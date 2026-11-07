@@ -96,3 +96,9 @@
   :root{--move-size:clamp(52px,14.5dvh,70px);--action-size:clamp(60px,17dvh,82px)}
   .touch-controls button{background:#f6d9eddc}
 }
+
+/* Live browser performance diagnostic. Green-ish on normal, pink if <40 FPS. */
+.performance-indicator{position:absolute;top:7px;right:8px;z-index:3;padding:3px 7px;background:#fff8e9e8;border:1px solid #ad9198;border-radius:8px;color:#6e5863;font:800 11px system-ui;pointer-events:none}
+.performance-indicator.performance-slow{color:#a62444;background:#ffe0e4f0}
+@media (pointer:coarse) and (orientation:landscape){.performance-indicator{top:64px;right:8px}}
+@media (pointer:coarse) and (orientation:portrait){.performance-indicator{top:7px;right:8px;font-size:10px}}

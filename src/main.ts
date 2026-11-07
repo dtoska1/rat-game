@@ -33,7 +33,8 @@ const game = new Phaser.Game({
   width: Math.max(320, gameContainer.clientWidth),
   height: Math.max(280, gameContainer.clientHeight),
   backgroundColor: '#ffe5d7',
-  render: { antialias: true, pixelArt: false },
+  render: { antialias: !window.matchMedia('(pointer: coarse)').matches, pixelArt: false, powerPreference: 'high-performance' },
+  fps: { target: 60, forceSetTimeOut: false },
   physics: { default: 'arcade', arcade: { debug: false, gravity: { x: 0, y: 1120 } } },
   // Resize the world to fit a phone screen rather than shrinking the entire desktop room.
   scale: { mode: Phaser.Scale.RESIZE, autoCenter: Phaser.Scale.NO_CENTER },
@@ -192,5 +193,23 @@ window.addEventListener('keydown', (event) => {
   if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space', ' '].includes(event.key) &&
       dialog.classList.contains('is-hidden')) event.preventDefault();
 }, { passive: false });
+// Frame rate is measured in the real browser rather than inferred from code.
+const fpsLabel = document.getElementById('performance-indicator');
+let frames = 0;
+let lastFPSUpdate = performance.now();
+function samplePerformance(now: number): void {
+  frames++;
+  if (now - lastFPSUpdate >= 1000) {
+    const fps = Math.round(frames * 1000 / (now - lastFPSUpdate));
+    if (fpsLabel) {
+      fpsLabel.textContent = `FPS ${fps}`;
+      fpsLabel.classList.toggle('performance-slow', fps < 40);
+    }
+    frames = 0;
+    lastFPSUpdate = now;
+  }
+  requestAnimationFrame(samplePerformance);
+}
+requestAnimationFrame(samplePerformance);
 window.addEventListener('blur', resetAllControls);
 document.addEventListener('visibilitychange', () => { if (document.hidden) resetAllControls(); });

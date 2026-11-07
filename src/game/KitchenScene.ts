@@ -259,7 +259,8 @@ export class KitchenScene extends Phaser.Scene {
     ];
     for (const [kind, x, y] of layout) {
       const sprite = this.add.image(x, y, kind).setDepth(8).setScale(0.85);
-      this.tweens.add({ targets: sprite, y: y - 3, duration: 940 + Phaser.Math.Between(0, 230),
+      // On low-power devices, leave snacks still instead of maintaining 11 infinite tweens.
+      if (!this.touchMode) this.tweens.add({ targets: sprite, y: y - 3, duration: 940 + Phaser.Math.Between(0, 230),
         repeat: -1, yoyo: true, ease: 'Sine.easeInOut' });
       this.foods.push({ kind, energy: FOOD_DATA[kind].energy, sprite, consumed: false });
     }
@@ -338,9 +339,9 @@ export class KitchenScene extends Phaser.Scene {
     if ((Phaser.Input.Keyboard.JustDown(this.keys.SPACE)) && !climbing) this.jump();
     if (direction !== 0) {
       this.rat.setFlipX(direction < 0);
-      this.rat.setAngle(Math.sin(this.animClock * (boosting ? 43 : 19)) * (boosting ? 10 : 4));
+      if (!this.touchMode) this.rat.setAngle(Math.sin(this.animClock * (boosting ? 43 : 19)) * (boosting ? 10 : 4));
     } else {
-      this.rat.setAngle(Math.sin(this.animClock * 3.4) * 2);
+      if (!this.touchMode) this.rat.setAngle(Math.sin(this.animClock * 3.4) * 2);
     }
   }
 
@@ -468,8 +469,8 @@ export class KitchenScene extends Phaser.Scene {
     this.chef.x = Phaser.Math.Clamp(this.chef.x + motion, 70, 1545);
     if (motion !== 0) this.chefFacing = Math.sign(motion);
     this.chef.setFlipX(this.chefFacing < 0);
-    this.chef.setAngle(Math.sin(this.animClock * (this.chefMode === 'chase' ? 22 : 9)) * (this.chefMode === 'chase' ? 6 : 2));
-    this.chef.setY(532 + Math.abs(Math.sin(this.animClock * (this.chefMode === 'chase' ? 19 : 8))) * 3);
+    if (!this.touchMode) this.chef.setAngle(Math.sin(this.animClock * (this.chefMode === 'chase' ? 22 : 9)) * (this.chefMode === 'chase' ? 6 : 2));
+    if (!this.touchMode) this.chef.setY(532 + Math.abs(Math.sin(this.animClock * (this.chefMode === 'chase' ? 19 : 8))) * 3);
     this.chef.setTint(this.chefMode === 'chase' ? 0xffc7c9 : 0xffffff);
 
     if (!this.hidden && this.chefMode === 'chase' && Math.abs(this.rat.x - this.chef.x) < (this.touchMode ? 45 : 57) && this.rat.y > 485) {
