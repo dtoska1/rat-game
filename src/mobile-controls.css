@@ -102,3 +102,32 @@
 .performance-indicator.performance-slow{color:#a62444;background:#ffe0e4f0}
 @media (pointer:coarse) and (orientation:landscape){.performance-indicator{top:64px;right:8px}}
 @media (pointer:coarse) and (orientation:portrait){.performance-indicator{top:7px;right:8px;font-size:10px}}
+
+/* V2: simple five-button layout. Action is contextual, including climbing and hiding. */
+.room-label{position:absolute;z-index:3;top:8px;left:8px;border:1px solid #b58b96;border-radius:12px;background:#fff8dfeb;color:#79516d;padding:4px 9px;font:900 11px "Trebuchet MS",system-ui;pointer-events:none}
+.hud-points{white-space:nowrap}
+.hud-points strong{font-variant-numeric:tabular-nums}
+@media (pointer:coarse){
+  .touch-movement,.touch-actions{display:flex!important;flex-direction:row!important;align-items:flex-end;justify-content:center;gap:8px!important}
+  .touch-controls{gap:10px!important;justify-content:space-between}
+  .touch-controls button{grid-column:auto!important;grid-row:auto!important;flex:0 0 auto}
+  .touch-hide,.touch-climb{display:none!important}
+  .touch-interact{background:#a9ddc1f2!important;font-size:12px!important}
+  .touch-jump{background:#f7d388ef!important}
+  .hud-points{display:none}
+  .room-label{top:6px;left:6px;font-size:9px;padding:3px 7px}
+}
+@media (pointer:coarse) and (orientation:portrait){
+  :root{--move-size:clamp(56px,15.1vw,72px);--action-size:clamp(61px,16vw,78px)}
+  .touch-controls{min-height:calc(var(--move-size) + 22px + env(safe-area-inset-bottom));padding:10px max(10px,env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))}
+  .touch-controls .touch-movement button{height:var(--move-size);width:var(--move-size)}
+  .touch-controls .touch-actions button{height:var(--move-size);width:var(--action-size)}
+  .touch-interact{font-size:11px!important}
+  .status-strip{top:32px}
+}
+@media (pointer:coarse) and (orientation:landscape){
+  :root{--move-size:clamp(56px,17dvh,78px);--action-size:clamp(60px,18dvh,82px)}
+  .touch-controls .touch-movement button{height:var(--move-size);width:var(--move-size)}
+  .touch-controls .touch-actions button{height:var(--move-size);width:var(--action-size)}
+  .room-label{top:66px}
+}
