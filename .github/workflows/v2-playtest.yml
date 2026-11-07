@@ -1,0 +1,43 @@
+name: V2 browser gameplay regression
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'index.html'
+      - 'tests/v2-playtest.mjs'
+      - '.github/workflows/v2-playtest.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  v2-mobile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install game and Playwright
+        run: |
+          npm install --no-audit --no-fund
+          npm install --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Start Vite dev server
+        run: |
+          (npm run dev -- --host 127.0.0.1 > /tmp/rat-vite.log 2>&1 &)
+          for i in {1..60}; do curl -fsS http://127.0.0.1:5173/ >/dev/null && break || sleep 1; done
+      - name: Exercise V2 on portrait and landscape mobile
+        env:
+          TARGET_URL: http://127.0.0.1:5173/
+        run: node tests/v2-playtest.mjs
+      - name: Archive mobile screenshots and performance report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rat-game-v2-mobile-regression
+          path: test-results/v2/
