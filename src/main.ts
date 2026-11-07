@@ -1,220 +1,206 @@
 import Phaser from 'phaser';
-import { KitchenScene, releaseVirtualControls, setVirtualControl } from './game/KitchenScene';
+import { KitchenScene, setVirtualControl, releaseVirtualControls } from './game/KitchenScene';
 import './style.css';
-import './mobile-controls.css';
 
-// A visible diagnostic replaces the confusing all-pink screen if setup fails.
-const startupError = document.getElementById('startup-error')!;
-let sceneReady = false;
-const showStartupError = (message: string): void => {
-  if (sceneReady) return;
-  startupError.textContent = `The kitchen failed to load: ${message}. Open Chrome DevTools → Console and copy the red error if it still fails.`;
-  startupError.classList.remove('is-hidden');
-};
-window.addEventListener('error', (event) => showStartupError(event.message || 'JavaScript error'));
-window.addEventListener('unhandledrejection', (event) => showStartupError(String(event.reason || 'Promise rejection')));
-window.addEventListener('ratgame:fatal', (event) => showStartupError(String((event as CustomEvent<string>).detail)));
-window.addEventListener('ratgame:ready', () => {
-  sceneReady = true;
-  startupError.classList.add('is-hidden');
-});
-window.setTimeout(() => {
-  if (!sceneReady) showStartupError('The game scene did not initialize within 8 seconds');
-}, 8000);
+type Mode = 'intro' | 'playing' | 'paused' | 'won' | 'lost';
+let mode: Mode = 'intro';
+let ready = false;
+let mute = false;
+let audio: AudioContext | null = null;
 
-const scene = new KitchenScene();
-const useCanvas = new URLSearchParams(window.location.search).get('renderer') === 'canvas';
-const gameContainer = document.getElementById('game')!;
+const ui = (id: string) => document.getElementById(id)!;
+const overlay = ui('overlay');
+const playButton = ui('play') as HTMLButtonElement;
+const restartButton = ui('restart') as HTMLButtonElement;
+const gameBox = ui('game');
+const errorBox = ui('startup-error');
+
 const game = new Phaser.Game({
-  // WebGL accelerates rendering on mobile; Phaser falls back to Canvas when unavailable.
-  // Add ?renderer=canvas to the URL if a particular device has WebGL trouble.
-  type: useCanvas ? Phaser.CANVAS : Phaser.AUTO,
+  type: new URLSearchParams(location.search).get('renderer') === 'canvas' ? Phaser.CANVAS : Phaser.AUTO,
   parent: 'game',
-  width: Math.max(320, gameContainer.clientWidth),
-  height: Math.max(280, gameContainer.clientHeight),
-  backgroundColor: '#ffe5d7',
-  render: { antialias: !window.matchMedia('(pointer: coarse)').matches, pixelArt: false, powerPreference: 'high-performance' },
-  fps: { target: 60, forceSetTimeOut: false },
-  physics: { default: 'arcade', arcade: { debug: false, gravity: { x: 0, y: 1120 } } },
-  // Resize the world to fit a phone screen rather than shrinking the entire desktop room.
+  width: Math.max(300, gameBox.clientWidth),
+  height: Math.max(300, gameBox.clientHeight),
+  backgroundColor: '#f7e4d2',
+  render: { antialias: true, pixelArt: false, powerPreference: 'high-performance' },
+  fps: { target: 60 },
   scale: { mode: Phaser.Scale.RESIZE, autoCenter: Phaser.Scale.NO_CENTER },
-  scene: [scene],
+  physics: { default: 'arcade', arcade: { gravity: { x: 0, y: 1280 }, debug: false } },
+  scene: [new KitchenScene()],
 });
+if (import.meta.env.DEV) (window as Window & { __ratGame?: Phaser.Game }).__ratGame = game;
 
-// Expose the Phaser instance only on the local dev server for automated playtests.
-if (import.meta.env.DEV) {
-  (window as Window & { __ratGame?: Phaser.Game }).__ratGame = game;
+function scene(): KitchenScene { return game.scene.getScene('KitchenScene') as KitchenScene; }
+function setDialog(next: Mode, title: string, copy: string, button: string): void {
+  mode = next;
+  ui('overlay-title').textContent = title;
+  ui('overlay-copy').textContent = copy;
+  playButton.textContent = button;
+  restartButton.hidden = next !== 'paused';
+  ui('overlay-kicker').textContent = next === 'lost' ? 'BON APPÉTIT, MONSIEUR RAT' :
+    next === 'won' ? 'A GRAND SUCCESS IN CRIME' : next === 'paused' ? 'A VERY SERIOUS PAUSE' : 'A VERY IMPORTANT MISSION';
+  overlay.classList.remove('is-hidden');
+  releaseAll();
 }
-
-const dialog = document.getElementById('dialog')!;
-const dialogIcon = document.getElementById('dialog-icon')!;
-const dialogKicker = document.getElementById('dialog-kicker')!;
-const dialogTitle = document.getElementById('dialog-title')!;
-const dialogDescription = document.getElementById('dialog-description')!;
-const actionButton = document.getElementById('action-button') as HTMLButtonElement;
-const restartDialogButton = document.getElementById('restart-dialog-btn') as HTMLButtonElement;
-type DialogMode = 'intro' | 'paused' | 'won' | 'lost';
-let dialogMode: DialogMode = 'intro';
-
-interface DialogData { mode: DialogMode; icon: string; kicker: string; title: string; description: string; button: string }
-function showDialog(data: DialogData): void {
-  dialogMode = data.mode;
-  dialogIcon.textContent = data.icon;
-  dialogKicker.textContent = data.kicker;
-  dialogTitle.textContent = data.title;
-  dialogDescription.textContent = data.description;
-  actionButton.textContent = data.button;
-  restartDialogButton.hidden = data.mode !== 'paused';
-  dialog.classList.remove('is-hidden');
-  if (data.mode !== 'intro' && data.mode !== 'paused') resetAllControls();
+function dismiss(): void { overlay.classList.add('is-hidden'); }
+function start(): void {
+  if (!ready) return;
+  mode = 'playing';
+  dismiss();
+  scene().startPlaying();
 }
-function hideDialog(): void { dialog.classList.add('is-hidden'); }
-function currentScene(): KitchenScene { return game.scene.getScene('KitchenScene') as KitchenScene; }
-
-window.addEventListener('ratgame:dialog', (event) => {
-  showDialog((event as CustomEvent<DialogData>).detail);
-});
-window.addEventListener('ratgame:pause-request', pauseToggle);
-
-function pauseToggle(): void {
-  if (dialogMode === 'won' || dialogMode === 'lost') return;
-  if (dialogMode === 'paused') {
-    dialogMode = 'intro';
-    hideDialog();
-    game.scene.resume('KitchenScene');
-    return;
-  }
-  if (!dialog.classList.contains('is-hidden')) return;
-  game.scene.pause('KitchenScene');
-  showDialog({ mode: 'paused', icon: '🐀', kicker: 'THE RAT IS THINKING', title: 'PAUSED.',
-    description: 'The chef is also frozen in time. Do not tell him.', button: 'RESUME CHAOS' });
-}
-
 function restart(): void {
-  resetAllControls();
-  // Clear any button that was still held when the previous round ended.
-  document.querySelectorAll<HTMLButtonElement>('[data-hold]').forEach((button) => {
-    button.classList.remove('pressed');
-  });
-  dialogMode = 'intro';
-  hideDialog();
-
-  // Wait for this scene's own ready signal, instead of guessing that the
-  // first global POST_STEP means its controls and physics are initialized.
-  // Register BEFORE starting so a synchronous create() can't be missed.
-  window.addEventListener('ratgame:ready', () => currentScene().startPlaying(), { once: true });
+  releaseAll();
+  ready = false;
+  mode = 'intro';
+  dismiss();
+  window.addEventListener('ratgame:ready', () => { ready = true; start(); }, { once: true });
   game.scene.stop('KitchenScene');
   game.scene.start('KitchenScene');
 }
-
-actionButton.addEventListener('click', () => {
-  if (dialogMode === 'paused') { pauseToggle(); return; }
-  if (dialogMode === 'won' || dialogMode === 'lost') { restart(); return; }
-  hideDialog();
-  currentScene().startPlaying();
+function pause(): void {
+  if (!ready || mode === 'won' || mode === 'lost') return;
+  if (mode === 'paused') {
+    mode = 'playing'; game.scene.resume('KitchenScene'); dismiss();
+  } else if (mode === 'playing') {
+    game.scene.pause('KitchenScene');
+    setDialog('paused','THE RAT IS THINKING.','The chef is frozen too. Nobody tell him.','RESUME RAT BUSINESS');
+  }
+}
+playButton.addEventListener('click', () => {
+  if (mode === 'paused') pause();
+  else if (mode === 'won' || mode === 'lost') restart();
+  else start();
+});
+restartButton.addEventListener('click', restart);
+ui('pause').addEventListener('click', pause);
+ui('sound').addEventListener('click', () => {
+  mute = !mute; ui('sound').textContent = mute ? '♫ OFF' : '♫ ON';
 });
 
-document.getElementById('pause-btn')!.addEventListener('click', pauseToggle);
-document.getElementById('pause-mobile-btn')!.addEventListener('click', pauseToggle);
-restartDialogButton.addEventListener('click', restart);
-document.getElementById('restart-btn')!.addEventListener('click', restart);
-
-document.getElementById('how-to-btn')!.addEventListener('click', () => {
-  document.getElementById('instructions')!.scrollIntoView({ behavior: 'smooth', block: 'center' });
+window.addEventListener('ratgame:ready', () => {
+  ready = true;
+  errorBox.classList.add('is-hidden');
+});
+window.addEventListener('ratgame:dialog', evt => {
+  const info = (evt as CustomEvent<{mode: Mode;title:string;subtitle:string;button:string}>).detail;
+  setDialog(info.mode, info.title, info.subtitle, info.button);
+});
+window.addEventListener('ratgame:pause-request', pause);
+window.addEventListener('ratgame:fatal', evt => {
+  const info = (evt as CustomEvent<{message:string}>).detail;
+  errorBox.textContent = info?.message || 'The kitchen could not load.';
+  errorBox.classList.remove('is-hidden');
+});
+window.addEventListener('unhandledrejection', evt => {
+  if (ready) return;
+  errorBox.textContent = String(evt.reason || 'Loading error');
+  errorBox.classList.remove('is-hidden');
 });
 
-// Multi-touch: each pointer is independent; movement + jumping/boost work together.
-const heldControls: Array<() => void> = [];
-const gameIsActive = (): boolean => dialog.classList.contains('is-hidden');
+function playSound(kind: string): void {
+  if (mute || mode !== 'playing') return;
+  try {
+    audio ??= new AudioContext();
+    if (audio.state === 'suspended') void audio.resume();
+    const start = audio.currentTime;
+    const sounds: Record<string, [number, number, number]> = {
+      jump: [380, 530, .13], climb: [280, 440, .17],
+      eat: [620, 350, .15], steal: [330, 720, .27], hide: [230, 180, .13],
+      pop: [290, 450, .14], win: [520, 850, .35], alarm: [250, 170, .28],
+      caught: [340, 130, .46],
+    };
+    const [from, to, duration] = sounds[kind] || sounds.pop;
+    const osc = audio.createOscillator();
+    const gain = audio.createGain();
+    osc.type = kind === 'alarm' || kind === 'caught' ? 'sawtooth' : 'sine';
+    osc.frequency.setValueAtTime(from, start);
+    osc.frequency.exponentialRampToValueAtTime(to, start + duration);
+    gain.gain.setValueAtTime(.035, start);
+    gain.gain.exponentialRampToValueAtTime(.001, start + duration);
+    osc.connect(gain).connect(audio.destination);
+    osc.start(start); osc.stop(start + duration);
+  } catch { /* Sound is optional on restricted browsers. */ }
+}
+window.addEventListener('ratgame:sound', e => {
+  playSound((e as CustomEvent<{kind:string}>).detail.kind);
+});
+
+// Reliable multitouch: holding LEFT while pressing JUMP doesn't release movement.
+const heldReset: Array<() => void> = [];
+const recentTap: Record<'left'|'right', number> = { left: 0, right: 0 };
 for (const button of document.querySelectorAll<HTMLButtonElement>('[data-hold]')) {
-  const control = button.dataset.hold as 'left' | 'right' | 'up' | 'boost';
+  const dir = button.dataset.hold as 'left' | 'right';
   const pointers = new Set<number>();
-  const reset = () => {
-    pointers.clear();
-    setVirtualControl(control, false);
-    button.classList.remove('pressed');
-  };
-  heldControls.push(reset);
-  button.addEventListener('pointerdown', (event: PointerEvent) => {
-    if (!gameIsActive()) return;
-    event.preventDefault();
-    try { button.setPointerCapture(event.pointerId); } catch { /* capture unavailable */ }
-    pointers.add(event.pointerId);
-    setVirtualControl(control, true);
-    button.classList.add('pressed');
-  });
-  const release = (event: PointerEvent) => {
-    event.preventDefault();
+  let sprintPointer = -1;
+  function release(event: PointerEvent): void {
     pointers.delete(event.pointerId);
-    const held = pointers.size > 0;
-    setVirtualControl(control, held);
-    button.classList.toggle('pressed', held);
-  };
-  button.addEventListener('pointerup', release);
-  button.addEventListener('pointercancel', release);
-  button.addEventListener('lostpointercapture', release);
+    if (event.pointerId === sprintPointer) {
+      sprintPointer = -1; setVirtualControl('boost', false); button.classList.remove('boosting');
+    }
+    setVirtualControl(dir, pointers.size > 0);
+    button.classList.toggle('down', pointers.size > 0);
+  }
+  button.addEventListener('pointerdown', event => {
+    if (mode !== 'playing') return;
+    event.preventDefault();
+    try { button.setPointerCapture(event.pointerId); } catch { /* ignore */ }
+    pointers.add(event.pointerId); setVirtualControl(dir, true);
+    const now = performance.now();
+    if (now - recentTap[dir] < 320) {
+      sprintPointer = event.pointerId;
+      setVirtualControl('boost', true);
+      button.classList.add('boosting');
+    }
+    recentTap[dir] = now;
+    button.classList.add('down');
+  });
+  for (const type of ['pointerup','pointercancel','lostpointercapture'] as const)
+    button.addEventListener(type, release);
+  heldReset.push(() => {
+    pointers.clear(); sprintPointer = -1; button.classList.remove('down','boosting');
+    setVirtualControl(dir, false); setVirtualControl('boost', false);
+  });
 }
 for (const button of document.querySelectorAll<HTMLButtonElement>('[data-tap]')) {
   const act = () => {
-    if (!gameIsActive()) return;
-    const scene = currentScene();
-    switch (button.dataset.tap) {
-      case 'jump': scene.virtualJump(); break;
-      case 'climb': scene.virtualClimb(); break;
-      case 'interact': scene.virtualInteract(); break;
-      case 'hide': scene.virtualHide(); break;
-    }
+    if (mode !== 'playing') return;
+    if (button.dataset.tap === 'jump') scene().virtualJump();
+    else scene().virtualInteract();
   };
-  button.addEventListener('pointerdown', (event: PointerEvent) => {
+  button.addEventListener('pointerdown', event => {
     event.preventDefault();
-    try { button.setPointerCapture(event.pointerId); } catch { /* capture unavailable */ }
-    button.classList.add('pressed');
-    act();
+    if (mode !== 'playing') return;
+    try { button.setPointerCapture(event.pointerId); } catch { /* ignore */ }
+    button.classList.add('down'); act();
   });
-  for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) {
-    button.addEventListener(type, () => button.classList.remove('pressed'));
-  }
-  // Pointerdown prevents synthetic clicks; keep keyboard activation.
-  button.addEventListener('click', (event: MouseEvent) => { if (event.detail === 0) act(); });
+  for (const type of ['pointerup','pointercancel','lostpointercapture'])
+    button.addEventListener(type, () => button.classList.remove('down'));
+  button.addEventListener('click', event => { if (event.detail === 0) act(); });
 }
-
-const fullscreenButton = document.getElementById('fullscreen-btn') as HTMLButtonElement;
-const fullscreenTarget = document.getElementById('game-shell')!;
-if (!document.fullscreenEnabled || !fullscreenTarget.requestFullscreen) fullscreenButton.hidden = true;
-fullscreenButton.addEventListener('click', async () => {
-  try {
-    if (document.fullscreenElement) await document.exitFullscreen();
-    else await fullscreenTarget.requestFullscreen();
-  } catch (error) { console.info('Fullscreen unavailable:', error); }
-});
-const mobileHint = document.getElementById('rotate-tip');
-document.getElementById('dismiss-rotate-tip')?.addEventListener('click', () => mobileHint?.classList.add('is-dismissed'));
-function resetAllControls(): void {
-  heldControls.forEach(reset => reset());
-  releaseVirtualControls();
-}
-// Prevent arrows / Space from scrolling the page during gameplay.
-window.addEventListener('keydown', (event) => {
-  if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space', ' '].includes(event.key) &&
-      dialog.classList.contains('is-hidden')) event.preventDefault();
+function releaseAll(): void { heldReset.forEach(f => f()); releaseVirtualControls(); }
+window.addEventListener('blur', releaseAll);
+document.addEventListener('visibilitychange', () => { if (document.hidden) releaseAll(); });
+window.addEventListener('keydown', e => {
+  if (mode === 'playing' && ['ArrowLeft','ArrowRight','ArrowUp',' ','Space'].includes(e.key)) e.preventDefault();
 }, { passive: false });
-// Frame rate is measured in the real browser rather than inferred from code.
-const fpsLabel = document.getElementById('performance-indicator');
-let frames = 0;
-let lastFPSUpdate = performance.now();
-function samplePerformance(now: number): void {
-  frames++;
-  if (now - lastFPSUpdate >= 1000) {
-    const fps = Math.round(frames * 1000 / (now - lastFPSUpdate));
-    if (fpsLabel) {
-      fpsLabel.textContent = `FPS ${fps}`;
-      fpsLabel.classList.toggle('performance-slow', fps < 40);
+
+const debug = new URLSearchParams(location.search).has('debug');
+if (debug) {
+  const fps = ui('fps-debug'); fps.hidden = false;
+  let counter = 0, last = performance.now();
+  const frame = (now: number) => {
+    counter++;
+    if (now - last > 1000) {
+      fps.textContent = Math.round(counter * 1000 / (now - last)) + ' FPS';
+      counter = 0; last = now;
     }
-    frames = 0;
-    lastFPSUpdate = now;
-  }
-  requestAnimationFrame(samplePerformance);
+    requestAnimationFrame(frame);
+  };
+  requestAnimationFrame(frame);
 }
-requestAnimationFrame(samplePerformance);
-window.addEventListener('blur', resetAllControls);
-document.addEventListener('visibilitychange', () => { if (document.hidden) resetAllControls(); });
+setTimeout(() => {
+  if (!ready) {
+    errorBox.textContent = 'This kitchen failed to load. Please refresh or open the browser Console.';
+    errorBox.classList.remove('is-hidden');
+  }
+}, 12000);
