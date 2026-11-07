@@ -54,7 +54,6 @@ export class KitchenScene extends Phaser.Scene {
   private snacks: Snack[] = [];
   private foodHeld: SnackType | null = null;
   private foodGraphic: Phaser.GameObjects.Image | null = null;
-  private fx!: Phaser.GameObjects.Particles.ParticleEmitter | null;
   private notice!: Phaser.GameObjects.Text;
   private prompt!: Phaser.GameObjects.Text;
   private energy = 62;
@@ -78,7 +77,6 @@ export class KitchenScene extends Phaser.Scene {
   private statusClock = 0;
   private messageUntil = 0;
   private jumpWasDown = false;
-  private chefGasp = false;
   private mobile = false;
 
   constructor() { super({ key: 'KitchenScene' }); }
@@ -163,8 +161,8 @@ export class KitchenScene extends Phaser.Scene {
     this.chefState = 'patrol'; this.chefFacing = -1; this.chefAlert = 0;
     this.chefLastSeen = 900; this.chefSearching = 0; this.chefStunned = 0;
     this.floorTime = -1e9; this.jumpQueued = -1e9; this.timeElapsed = 0;
-    this.statusClock = 0; this.messageUntil = 0; this.jumpWasDown = false; this.chefGasp = false;
-    this.fx = null; releaseVirtualControls();
+    this.statusClock = 0; this.messageUntil = 0; this.jumpWasDown = false;
+    releaseVirtualControls();
   }
 
   private surface(x: number, y: number, w: number, h: number): void {
