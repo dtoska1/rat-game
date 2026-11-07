@@ -135,7 +135,7 @@ for (const button of document.querySelectorAll<HTMLButtonElement>('[data-hold]')
   function release(event: PointerEvent): void {
     pointers.delete(event.pointerId);
     if (event.pointerId === sprintPointer) {
-      sprintPointer = -1; setVirtualControl('boost', false);
+      sprintPointer = -1; setVirtualControl('boost', false); button.classList.remove('boosting');
     }
     setVirtualControl(dir, pointers.size > 0);
     button.classList.toggle('down', pointers.size > 0);

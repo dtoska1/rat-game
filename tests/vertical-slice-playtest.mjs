@@ -30,7 +30,7 @@ for (const [name,width,height] of [['portrait',390,844],['landscape',844,390]]) 
     const x1=await evalScene(()=>window.__ratGame.scene.getScene('KitchenScene').rat.x);
     assert(x1>x0+35,'Holding right moves the rat');
     await page.locator('[data-tap=jump]').evaluate(el=>el.dispatchEvent(new PointerEvent('pointerdown',{pointerId:4,bubbles:true})));
-    await page.waitForTimeout(180);
+    await page.waitForTimeout(90);
     const vy=await evalScene(()=>window.__ratGame.scene.getScene('KitchenScene').rat.body.velocity.y);
     assert(vy<0,'Jump button propels rat up');
     await evalScene(()=>{
