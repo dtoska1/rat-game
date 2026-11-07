@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 250 295" width="250" height="295"><g stroke="#573a42" stroke-linecap="round" stroke-linejoin="round" stroke-width="5">
+ <!-- legs -->
+ <path d="M63 210 l-3 48 q10 17 29 0 l10 -38 M133 213 l20 45 q22 15 33 -4 l-22 -50" fill="#57495a"/>
+ <path d="M57 255 q-28 18 -6 24 h44 q14 -5 -1 -23 M154 256 q-8 21 10 23 h43 q15 -8 -8 -21" fill="#43333a"/>
+ <!-- jacket -->
+ <path d="M76 120 Q38 129 34 175 L27 224 Q96 244 178 224 L173 157 Q161 123 133 120 Z" fill="#fffbef"/>
+ <path d="M93 126 L105 216 M124 126 L112 214" fill="none"/>
+ <circle cx="97" cy="159" r="4" fill="#75616b"/><circle cx="124" cy="159" r="4" fill="#75616b"/>
+ <circle cx="95" cy="190" r="4" fill="#75616b"/><circle cx="125" cy="190" r="4" fill="#75616b"/>
+ <path d="M91 128 q17 14 32 0 l-9 22 -12 1Z" fill="#ed7d8f"/>
+ <!-- arms -->
+ <path d="M46 139 Q5 154 16 197 Q26 211 51 198 L64 178" fill="#fff8ef"/>
+ <ellipse cx="17" cy="191" rx="14" ry="13" fill="#f4c3a5"/>
+ <path d="M157 140 Q196 155 191 190 L181 212 Q157 207 147 189" fill="#fff8ef"/>
+ <ellipse cx="182" cy="206" rx="14" ry="12" fill="#f4c3a5"/>
+ <!-- face -->
+ <ellipse cx="110" cy="88" rx="58" ry="56" fill="#f6c6aa"/>
+ <path d="M56 92 q-18 -7 -9 -24 q15 -12 18 16 M167 90 q21 -12 9 -25 q-16 -10 -19 15" fill="#f0b497"/>
+ <!-- hat -->
+ <path d="M74 57 Q48 45 60 22 Q69 7 88 18 Q95 -4 116 9 Q133 -4 148 13 Q173 4 176 29 Q177 46 155 56 L157 66 H73Z" fill="#fffdf4"/>
+ <path d="M76 56 Q114 66 158 56 L157 74 Q114 81 73 73Z" fill="#f9f0e7"/>
+ <!-- face details -->
+ <path d="M81 91 q11 -10 25 -1 M125 89 q15 -14 29 0" fill="none" stroke-width="5"/>
+ <ellipse cx="91" cy="100" rx="5" ry="7" fill="#312c38" stroke="none"/>
+ <ellipse cx="139" cy="98" rx="5" ry="7" fill="#312c38" stroke="none"/>
+ <ellipse cx="116" cy="114" rx="12" ry="10" fill="#ec9a96"/>
+ <!-- mustache -->
+ <path d="M113 124 Q84 105 74 135 Q92 128 106 143 Q121 151 126 133 Q146 118 159 136 Q157 111 136 115Z" fill="#392e3b" />
+ <path d="M107 150 q14 10 25 -2" fill="none" stroke="#6d3c4a"/>
+ <!-- utensil -->
+ <path d="M192 187 L222 114 M209 127 q-16 -26 -1 -37 q22 -16 28 12 q5 18 -14 25" fill="#bac3ca" stroke="#58616e" stroke-width="5"/>
+ </g></svg>
