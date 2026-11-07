@@ -1,71 +1,69 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#fce9df" />
-  <meta name="description" content="Rat Game: be round, steal cake, and avoid the world's angriest French chef." />
-  <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
-  <title>RAT GAME — Very Serious Rat Business</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <meta name="theme-color" content="#f9dce4"/>
+  <meta name="description" content="Rat Game — be round, steal cake, don't get baked."/>
+  <link rel="icon" href="./favicon.svg"/>
+  <title>RAT GAME — The Great Pastry Heist</title>
 </head>
 <body>
-  <div class="page-shell">
-    <header class="topbar">
-      <div class="branding"><span class="logo-rat">🐀</span><div><strong><span>RAT</span> GAME</strong><small>very serious rat business™</small></div></div>
-      <div class="top-right"><span class="handdrawn-badge">V2 · Preview</span><button class="small-button" id="restart-btn" type="button" title="Restart the game">↻ RESTART</button><button class="small-button" id="pause-btn" type="button" title="Pause the game">Ⅱ PAUSE</button></div>
-    </header>
-    <main>
-      <section class="headline" aria-label="Game introduction">
-        <p>THE MOST IMPORTANT HEIST IN RODENT HISTORY</p>
-        <h1>STEAL FOOD. <em>BE ROUND.</em> DON'T GET BAKED.</h1>
+<div class="app">
+  <header class="top">
+    <div class="brand"><span class="rat-sticker">🐭</span><div><strong>RAT <em>GAME</em></strong><small>the world's dumbest heist</small></div></div>
+    <div class="top-actions"><span class="version">THE KITCHEN • PLAYTEST 01</span><button id="sound" class="top-button" aria-label="Toggle sound">♫ ON</button><button id="pause" class="top-button" aria-label="Pause game">Ⅱ</button></div>
+  </header>
+
+  <main class="play-area" id="game-shell">
+    <div id="game" aria-label="Side-scrolling cartoon rat game"></div>
+    <div class="paper-grain" aria-hidden="true"></div>
+
+    <div class="hud" aria-label="Game status">
+      <div class="energy-box">
+        <span class="hud-rat">🐭</span>
+        <div class="hud-meter">
+          <div class="hud-label"><strong>⚡ ENERGY / BOOST</strong><span><b id="energy-value">62</b>%</span></div>
+          <div class="meter"><div class="meter-fill" id="energy-bar" style="width:62%"></div></div>
+        </div>
+      </div>
+      <div class="loot-box"><small>🥐 CARRYING</small><b id="held-value">NONE</b></div>
+      <div class="loot-box"><small>🏠 DELIVERED</small><b><span id="delivered-value">0</span>/3</b></div>
+      <div class="chef-meter"><span>👨‍🍳 CHEF ALERT</span><div class="meter"><div id="chef-alert" class="meter-fill" style="width:0%"></div></div></div>
+    </div>
+
+    <div class="ribbon" id="game-status">STEAL. EAT. REPEAT.</div>
+
+    <div class="controls" id="controls" aria-label="Touch game controls">
+      <div class="control-side movement" aria-label="Movement">
+        <button class="ctrl dir" data-hold="left" type="button" aria-label="Move left"><span>◀</span></button>
+        <button class="ctrl dir" data-hold="right" type="button" aria-label="Move right"><span>▶</span></button>
+      </div>
+      <div class="control-side actions" aria-label="Actions">
+        <button class="ctrl action" data-tap="interact" type="button" aria-label="Eat, steal or hide"><span>✋</span><small id="action-label">ACTION</small></button>
+        <button class="ctrl jump" data-tap="jump" type="button" aria-label="Jump"><span>↑</span><small>JUMP</small></button>
+      </div>
+    </div>
+
+    <div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-labelledby="overlay-title">
+      <section class="paper-modal">
+        <div class="big-rat">🐀</div>
+        <div class="eyebrow" id="overlay-kicker">A VERY IMPORTANT MISSION</div>
+        <h1 id="overlay-title">WELCOME, LITTLE CRIMINAL.</h1>
+        <p id="overlay-copy">You are a very round rat. Eat pastries until you reach 100% energy. Then STEAL one, carry it HOME, and don't become rat cake.</p>
+        <div class="modal-guide">← → MOVE · SPACE JUMP · E EAT/STEAL/HIDE · SHIFT BOOST</div>
+        <button id="play" class="play-button" type="button">LET'S DO RAT CRIMES <span>→</span></button>
+        <button id="restart" class="restart-button" type="button" hidden>RESTART ROUND</button>
       </section>
-      <section class="game-shell" id="game-shell" aria-label="Playable Rat Game">
-        <div class="hud" aria-label="Game status">
-          <div class="hud-energy"><span class="rat-face">🐭</span><div class="meter-stack"><div class="meter-label"><b>⚡ ENERGY / BOOST</b><strong id="energy-label">47%</strong></div><div class="meter"><div class="meter-fill" id="energy-fill" style="width:47%"></div></div></div></div>
-          <div class="hud-pill"><span>🍰</span><div><small>CARRYING</small><strong id="carrying-label">Nothing</strong></div></div>
-          <div class="hud-pill"><span>🏠</span><div><small>DELIVERED</small><strong id="delivered-label">0/3</strong></div></div>
-          <div class="hud-pill hud-points"><span>⭐</span><div><small>SCORE / BEST</small><strong><span id="score-label">0</span> / <span id="best-label">0</span></strong></div></div>
-          <div class="hud-alert"><small>👨‍🍳 CHEF SUSPICION</small><div class="meter meter-alert"><div class="meter-fill" id="suspicion-fill" style="width:0%"></div></div></div>
-          <button id="pause-mobile-btn" class="mobile-pause-button" type="button" aria-label="Pause game" title="Pause">Ⅱ</button>
-          <button id="fullscreen-btn" class="fullscreen-button" type="button" aria-label="Toggle fullscreen" title="Fullscreen game">⛶</button>
-        </div>
-        <div class="game-stage" id="game-stage">
-          <div id="game" aria-label="Side-scrolling kitchen game" role="application"></div>
-          <div id="startup-error" class="startup-error is-hidden" role="alert"></div>
-          <div id="rotate-tip" class="rotate-tip">↻ Rotate for a wider view <button type="button" id="dismiss-rotate-tip" aria-label="Dismiss rotation tip">×</button></div>
-          <div class="status-strip" id="status-label">STEAL SOMETHING!</div>
-          <div id="performance-indicator" class="performance-indicator" aria-label="Frame rate">FPS —</div>
-          <div id="room-label" class="room-label" aria-label="Current room">The Kitchen</div>
-          <div class="dialog" id="dialog" role="dialog" aria-labelledby="dialog-title" aria-modal="true">
-            <div class="dialog-panel">
-              <div class="dialog-icon" id="dialog-icon">🐀</div>
-              <p class="dialog-kicker" id="dialog-kicker">A VERY SERIOUS MISSION</p>
-              <h2 id="dialog-title">WELCOME, STUPID RAT.</h2>
-              <p class="dialog-description" id="dialog-description">Eat snacks to reach 100% energy, then steal an item and return to your rat hole. Visit the pantry through the kitchen's left door. On phones, ACTION also climbs nearby furniture and enters doors. Avoid the chef!</p>
-              <button id="action-button" class="action-button" type="button">LET'S DO RAT CRIMES →</button>
-              <button id="restart-dialog-btn" class="restart-dialog-button" type="button" hidden>RESTART ROUND ↻</button>
-              <p class="dialog-tip">WASD / arrows · SPACE jump · E eat/steal · SHIFT boost · S hide</p>
-            </div>
-          </div>
-        </div>
-        <div class="touch-controls" aria-label="Mobile game controls">
-          <div class="touch-group touch-movement" aria-label="Move and climb">
-             
-            <button class="touch-left" type="button" data-hold="left" aria-label="Hold to move left">◀</button>
-            <button class="touch-right" type="button" data-hold="right" aria-label="Hold to move right">▶</button>
-          </div>
-          <div class="touch-group touch-actions" aria-label="Rat actions">
-             
-            <button class="touch-interact" type="button" data-tap="interact" aria-label="Context action: eat, steal, climb, hide, enter door or deliver"><span id="touch-interact-label">ACTION</span></button>
-            <button class="touch-boost" type="button" data-hold="boost" aria-label="Hold to boost">⚡ <small>BOOST</small></button>
-            <button class="touch-jump" type="button" data-tap="jump" aria-label="Jump">JUMP</button>
-          </div>
-        </div>
-      </section>
-      <section class="below-game" id="instructions"><div><h2>YOUR TOTALLY NORMAL MISSION</h2><p>① Leave HOME on the right → ② Eat snacks to reach 100% energy → ③ Steal three pastries, one at a time → ④ Carry each snack HOME → ⑤ Explore the pantry through the left door. Avoid the French chef!</p></div><div class="how-card"><p><b>CONTROLS</b></p><p>Move <kbd>A</kbd><kbd>D</kbd> · Jump <kbd>SPACE</kbd> · Climb / Eat / Steal / Enter <kbd>E</kbd> · Boost <kbd>SHIFT</kbd> · Hide <kbd>S</kbd> · Pause <kbd>ESC</kbd>. Mobile: two movement buttons and JUMP / ACTION / BOOST.</p><button id="how-to-btn" type="button" class="info-link">HOW TO PLAY ↑</button></div></section>
-    </main>
-    <footer>Made with questionable decisions and an unreasonable number of pastries. 🧀</footer>
+    </div>
+    <div class="startup-error is-hidden" id="startup-error" role="alert"></div>
+    <div class="fps-debug" id="fps-debug" hidden></div>
+  </main>
+  <div class="under">
+    <p>🐀 <b>Be round.</b> Run toward table legs to scramble up automatically. Tap <b>✋</b> near a snack to eat or steal it. Hold SHIFT on desktop or double-tap a direction on mobile to boost.</p>
+    <p>Made with questionable rat judgment. Built for real browsers.</p>
   </div>
-  <script type="module" src="/src/main.ts"></script>
+</div>
+<script type="module" src="/src/main.ts"></script>
 </body>
 </html>
