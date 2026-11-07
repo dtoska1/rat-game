@@ -7,7 +7,7 @@ import eclairUrl from '../assets/eclair.png?url';
 import macaronUrl from '../assets/macaron.png?url';
 import cheeseUrl from '../assets/cheese.png?url';
 import {
-  FOOD, FLOOR_Y, GOAL, ROOMS, WORLD_HEIGHT, WORLD_WIDTH,
+  FOOD, GOAL, ROOMS, WORLD_HEIGHT, WORLD_WIDTH,
   type ClimbSpot, type FoodKind, type RoomId,
 } from './v2/levels';
 
