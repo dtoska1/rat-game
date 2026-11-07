@@ -64,6 +64,7 @@ export class KitchenScene extends Phaser.Scene {
   private playing = false;
   private ended = false;
   private climbing = false;
+  private climbTween: Phaser.Tweens.Tween | null = null;
   private climbingCooldown = 0;
   private chefState: ChefState = 'patrol';
   private chefFacing = -1;
@@ -97,6 +98,16 @@ export class KitchenScene extends Phaser.Scene {
   create(): void {
     this.reset();
     this.mobile = matchMedia('(pointer:coarse)').matches;
+    // Extend the painted room so the camera can center the rat near HOME.
+    const extension = this.add.graphics().setDepth(-60);
+    extension.fillStyle(0xf6daca).fillRect(-225, 0, 2050, 560);
+    extension.fillStyle(0xe5b691).fillRect(-225, 559, 2050, 141);
+    extension.lineStyle(2, 0xd9ae9e, .5);
+    for (let y = 111; y < 550; y += 74) {
+      extension.lineBetween(-225, y, 0, y);
+      extension.lineBetween(1600, y, 1825, y);
+    }
+    extension.fillStyle(0xd8a87d, .2).fillEllipse(-110, 615, 160, 18);
     this.add.image(0, 0, 'kitchen-vs').setOrigin(0, 0).setDepth(-50);
     this.physics.world.gravity.y = 1280;
     this.physics.world.setBounds(30, 10, 1540, 625);
@@ -157,7 +168,7 @@ export class KitchenScene extends Phaser.Scene {
     this.snacks = []; this.foodHeld = null; this.foodGraphic = null;
     this.energy = 62; this.collected = 0; this.score = 0;
     this.hidden = false; this.hidingPlace = ''; this.playing = false;
-    this.ended = false; this.climbing = false; this.climbingCooldown = 0;
+    this.ended = false; this.climbing = false; this.climbTween = null; this.climbingCooldown = 0;
     this.chefState = 'patrol'; this.chefFacing = -1; this.chefAlert = 0;
     this.chefLastSeen = 900; this.chefSearching = 0; this.chefStunned = 0;
     this.floorTime = -1e9; this.jumpQueued = -1e9; this.timeElapsed = 0;
@@ -183,7 +194,7 @@ export class KitchenScene extends Phaser.Scene {
       : coarse ? Math.min(w / 1060, h / 575)
       : Math.min(w / 1180, h / 655);
     this.cameras.main.setZoom(Phaser.Math.Clamp(zoom, .39, 1.45));
-    this.cameras.main.setBounds(0, 0, W, H);
+    this.cameras.main.setBounds(-225, 0, W + 450, H);
     this.cameras.main.setDeadzone(coarse ? 40 : 150, coarse ? 85 : 120);
     this.cameras.main.roundPixels = true;
   }
@@ -192,7 +203,17 @@ export class KitchenScene extends Phaser.Scene {
     if (!this.playing) { this.playing = true; this.say('GO STEAL SOMETHING, POTATO RAT!'); }
   }
   virtualJump(): void {
-    if (this.playing && !this.ended && !this.hidden) this.jumpQueued = this.time.now;
+    if (!this.playing || this.ended || this.hidden) return;
+    // A jump must work even if a table-climb animation has already begun.
+    if (this.climbing) {
+      this.climbTween?.stop();
+      this.climbTween = null;
+      this.climbing = false;
+      this.climbingCooldown = .45;
+      (this.rat.body as Phaser.Physics.Arcade.Body).setAllowGravity(true);
+      this.rat.setAngle(0).setScale(.47).setVelocityY(-390);
+      emit('sound', { kind: 'jump' });
+    } else this.jumpQueued = this.time.now;
   }
   virtualInteract(): void {
     if (!this.playing || this.ended) return;
@@ -252,7 +273,7 @@ export class KitchenScene extends Phaser.Scene {
     body.setAllowGravity(false);
     this.rat.setVelocity(0, 0);
     const startX = this.rat.x, startY = this.rat.y;
-    this.tweens.addCounter({
+    this.climbTween = this.tweens.addCounter({
       from: 0, to: 1, duration: 440, ease: 'Sine.easeInOut',
       onUpdate: tween => {
         const t = tween.getValue() || 0;
@@ -263,6 +284,7 @@ export class KitchenScene extends Phaser.Scene {
         this.rat.setAngle(Math.sin(t * Math.PI * 2) * 12);
       },
       onComplete: () => {
+        this.climbTween = null;
         this.rat.setAngle(0).setScale(.47);
         body.setAllowGravity(true);
         this.rat.setVelocity(0, 0);
@@ -405,7 +427,7 @@ export class KitchenScene extends Phaser.Scene {
     if (this.mobile && this.foodHeld && this.nearHole() && !this.hidden) this.interact();
     if (this.messageUntil > 0 && time >= this.messageUntil) {
       this.notice.setVisible(false); this.messageUntil = 0;
-    } else if (this.messageUntil) this.notice.setPosition(this.rat.x, this.rat.y - 104);
+    } else if (this.messageUntil) this.notice.setPosition(Phaser.Math.Clamp(this.rat.x, 265, W - 265), this.rat.y - 152);
 
     // Squash and stretch, body sways when running but keeps collision independent.
     if (!this.climbing && !this.hidden && this.rat.active) {
@@ -433,8 +455,9 @@ export class KitchenScene extends Phaser.Scene {
     else if (this.nearestFood() && !this.foodHeld)
       message = this.energy >= 99.9 ? 'STEAL THE SNACK!' : 'EAT FOR ENERGY';
     else if (this.hideSpot()) message = 'HIDE HERE';
-    if (message) this.prompt.setText(message).setPosition(this.rat.x, this.rat.y - 120);
-    this.prompt.setVisible(Boolean(message));
+    if (message) this.prompt.setText(message).setPosition(
+      Phaser.Math.Clamp(this.rat.x, 255, W - 235), this.rat.y - 120);
+    this.prompt.setVisible(Boolean(message) && this.messageUntil === 0);
   }
 
   private updateHud(): void {
@@ -459,7 +482,7 @@ export class KitchenScene extends Phaser.Scene {
 
   private say(message: string): void {
     if (!this.notice) return;
-    this.notice.setText(message).setPosition(this.rat.x, this.rat.y - 106).setVisible(true);
+    this.notice.setText(message).setPosition(Phaser.Math.Clamp(this.rat.x, 265, W - 265), this.rat.y - 152).setVisible(true);
     this.messageUntil = this.time.now + 1600;
   }
 
