@@ -41,6 +41,11 @@ const game = new Phaser.Game({
   scene: [scene],
 });
 
+// Expose the Phaser instance only on the local dev server for automated playtests.
+if (import.meta.env.DEV) {
+  (window as Window & { __ratGame?: Phaser.Game }).__ratGame = game;
+}
+
 const dialog = document.getElementById('dialog')!;
 const dialogIcon = document.getElementById('dialog-icon')!;
 const dialogKicker = document.getElementById('dialog-kicker')!;

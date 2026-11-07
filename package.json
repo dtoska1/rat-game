@@ -1,7 +1,7 @@
 {
   "name": "rat-game",
   "private": true,
-  "version": "0.5.0",
+  "version": "2.0.0-beta.1",
   "description": "A very serious game about a very round rat stealing very serious pastries.",
   "type": "module",
   "scripts": {
