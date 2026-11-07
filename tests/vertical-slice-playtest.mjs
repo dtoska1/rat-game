@@ -1,7 +1,7 @@
 import { chromium } from 'playwright';
 import fs from 'node:fs/promises';
 await fs.mkdir('test-results/vertical-slice', { recursive: true });
-const browser = await chromium.launch({ headless: true, args: ['--disable-dev-shm-usage','--enable-unsafe-swiftshader'] });
+const browser = await chromium.launch({ channel: 'chrome', headless: true, args: ['--disable-dev-shm-usage','--enable-unsafe-swiftshader'] });
 const results = [];
 for (const [name,width,height] of [['portrait',390,844],['landscape',844,390]]) {
   const context = await browser.newContext({ viewport: {width,height}, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
