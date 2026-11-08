@@ -1,114 +1,49 @@
-# 🐀 RAT GAME — Very Serious Rat Business
+# Rat Game · The Great Pastry Heist
 
-**Prototype v0.2** · Phaser 3 + TypeScript + Vite · 2D browser game
+A chubby rat, a human pastry chef and one hand-drawn kitchen. Slip out of the hole, climb three pastry tables and bring home an éclair, a macaron and a slice of strawberry cake.
 
-A very round rat must eat until it reaches 100% energy, steal food from a ridiculous French chef, and bring it home before becoming rat cake. Uses original, separate SVG images so the room, rat, chef and pastries can later be animated and expanded.
+## Play the preview
 
-## Run locally
+Download the [V3 preview ZIP](https://github.com/dtoska1/rat-game/raw/refs/heads/v3-rebuild/preview/Rat-Game-V3.zip), extract it, and open **Rat Game V3.html** in a desktop browser. The file bundles the game, artwork, fonts and sound. You can also generate it with `npm ci` and `npm run build:offline`. To run the project locally with Node 22.12 or later:
 
-Requires **Node.js 22** and npm (Node 20.19+ is also supported by recent Vite versions).
-
-```bash
-npm install
+```sh
+npm ci
 npm run dev
 ```
 
-Open the address Vite prints in the terminal (normally `http://localhost:5173/`). Do **not** double-click `index.html`; TypeScript and imported assets need Vite to run.
+## The kitchen
 
-To check the build:
+Move left from home. Jump onto the **mint stool from the side**, walk to the ladder and hold Climb. Use Action beside a small tasting portion to refill your energy. The three samples restore 24, 17 and 37 points respectively. At 100%, take the whole pastry on the other plate. Carry it back to the hole and use Action to stash it. Heavier pastries slow you down.
 
-```bash
+The chef follows a patrol and needs a clear view to spot you. Hide under a table, inside the blue teapot or in the hole. If he watches you disappear, he can investigate that spot. Knocking the spoon brings him to its location. Boost briefly to cross a dangerous sightline, then eat to refill.
+
+| Action | Keyboard | Touch |
+| --- | --- | --- |
+| Walk | A / D or left / right arrows | Left / right |
+| Variable-height jump | Hold Space | Hold Jump |
+| Climb at a ladder | Hold W or up arrow | Hold Climb |
+| Taste, take, stash, hide or emerge | E | Contextual Action |
+| Boost | Hold Shift while moving | Hold Boost while moving |
+| Pause | Esc | Pause button |
+
+## Build and test
+
+```sh
 npm run build
-npm run preview
+npm run preview -- --port 4318
+# In a second terminal
+npx playwright install chromium
+npm run test:game
+npm run build:offline
+node tests/v3-offline.mjs
 ```
 
-### Controls
+The browser tests play through the public controls. The opt-in `?debug` overlay reports frame interval and inputs. Its read-only observations let tests verify what happened. `?renderer=webgl` requests Phaser's accelerated renderer. Canvas is the default for this two-dimensional atlas-based scene. The test report records the interval between game-loop frames, CPU time in the Phaser step and the renderer's CPU submission time.
 
-| Key | Action |
-|---|---|
-| A / D or Left / Right | Move |
-| W or Up | Climb near furniture legs / ladder |
-| Space | Jump |
-| E | Eat food, pick food up at full energy, deliver at hole |
-| Shift (hold) | Speed boost (uses energy) |
-| S or Down | Hide / emerge at a hiding spot |
-| Escape | Pause |
+See [the playtest report](docs/PLAYTEST-V3.md), [the approval artwork](docs/ART_DIRECTION_V1.md), and [issue #3](https://github.com/dtoska1/rat-game/issues/3). The V3 workflow runs browser tests and attaches artifacts to the check.
 
-The touch controls below the canvas also work on phones and tablets, although desktop controls and the visual balance are the current focus.
+## Artwork and code
 
-### Objective and initial balance
+The original V3 plates are in `art-source/v3`. Run `node scripts/pack-art.mjs` to regenerate the transparent sprite atlas and illustrated wall. Texture frames use a bottom-centre anchor. The rat's physical half-width is 13 world units and its head clearance is 36. Props and actor poses are drawn independently of collision geometry.
 
-- Eat food until **100% energy**, then press **E** near food to **carry** rather than eat it.
-- Bring **3** stolen items to the hole marked **HOME** on the far right and press **E** to deposit them.
-- Boost is faster, but drains **32 energy per second** when running. Carrying slows the rat by **22%**.
-- The rat hole is a safe hiding spot. Under-table, cupboard and fridge zones are prototype hiding spots.
-- A basic chef patrol/chase/search model is provided as a *prototype*, not finished intelligent AI.
-- The rat/chef artwork and first-room layout are original SVG placeholders based on the approved concept sheet. They are not final sprite sheets.
-
-## How to publish with GitHub Pages
-
-1. On GitHub, create a **public** repository named `rat-game` (or any name). Do not initialize it with files if you intend to push this folder.
-2. From this folder, run:
-
-   ```bash
-   git init
-   git add .
-   git commit -m "Rat Game: first playable prototype"
-   git branch -M main
-   git remote add origin https://github.com/YOUR_USERNAME/rat-game.git
-   git push -u origin main
-   ```
-
-3. In GitHub **Settings → Pages → Build and deployment → Source**, choose **GitHub Actions**.
-4. The included `.github/workflows/deploy.yml` builds and deploys the site on pushes to `main`. Your site will appear at `https://YOUR_USERNAME.github.io/rat-game/` for that repository name. Other repository names use their own path.
-
-The `vite.config.ts` uses `base: './'` so asset paths also work at a GitHub Pages subpath. **GitHub Education isn't required for this free public static-hosting setup.**
-
-## Project layout
-
-```text
-rat-game/
-├── src/
-│   ├── assets/              Original SVG room, rat, chef, food textures
-│   ├── game/KitchenScene.ts  Phaser gameplay and basic enemy behavior
-│   ├── main.ts               Game boot, UI, touch controls, restart/pause
-│   └── style.css             Playful pastel website UI
-├── docs/                    Game design, art direction, production checklist
-├── assets/                  Reference art and concept sheets (not runtime assets)
-├── .github/workflows/       GitHub Pages deployment
-├── index.html
-├── package.json
-└── vite.config.ts
-```
-
-## Limitations and what's next
-
-This is an early playable **prototype**, not a finished game. It has placeholder rat and chef images rather than frame-by-frame sprite animation; the chef uses simple range-based detection rather than true obstacle raycasting, and the layout/controls still require playtesting. Next priorities: better climbing feel, real sprite animations, smarter chef AI, more nuanced collisions, and sound/comedic effects. All balance numbers are provisional.
-
-### Build validation disclosure
-
-The project was assembled in a sandbox without npm registry connectivity. A dependency installation and end-to-end Phaser runtime test could not be completed here. Run `npm install && npm run build` in a network-connected environment; report any errors and we'll fix them. Asset SVGs were rendered independently to verify they're valid.
-
-## Art direction
-
-See [`docs/ART_DIRECTION_V1.md`](docs/ART_DIRECTION_V1.md), [`docs/GAME_DESIGN_V1.md`](docs/GAME_DESIGN_V1.md), and [`docs/ASSET_CHECKLIST.md`](docs/ASSET_CHECKLIST.md).
-
-Art references are source material for the game's *creative direction*; SVGs in `src/assets` are separate provisional gameplay assets. Do not use the flattened concept sheet as collision geometry or a sprite sheet.
-
-
-## v0.2 bugfix (blank kitchen)
-
-The v0.1 release sometimes displayed only the HTML HUD with an empty peach-colored
-stage. This update changes the runtime assets from SVGs to pre-rendered PNGs,
-uses the Phaser Canvas renderer, and adds visible startup diagnostics.
-
-For an existing project, replace the extracted files with the v0.2 files
-(keep your `.git` directory and local settings), stop the Vite terminal with
-Ctrl+C, run `npm install` if needed, and restart with `npm run dev`.
-In Chrome, use Cmd+Shift+R for a hard refresh.
-
-If the screen remains blank, open Chrome DevTools → Console and send the **first
-red error**. The browser error will identify the remaining issue more precisely.
-
-Note: PNG export sizes match the old Phaser SVG-loader sizes. The original SVG
-source files are retained for editable artwork.
+`src/v3` separates the kitchen layout and occlusion, player motion, chef behavior, food interactions, sound, input and Phaser scene. `src/main.ts` owns the page HUD and dialogs. The timing-independent simulation advances at 120 fixed steps per second. Artwork in the older `src/assets` and concept folders is retained for reference.

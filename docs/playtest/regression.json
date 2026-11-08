@@ -1,0 +1,13 @@
+{
+  "checks": [
+    "No spawn win or right + action shortcut",
+    "Across the room on foot, the rat stays on the floor. Action under the pastry hides without eating or stealing.",
+    "Pause freezes the simulation and resumes normally",
+    "Teapot blocks a facing chef’s sightline at patrol range. Hidden rat survives a close pass.",
+    "Chef investigates the exact hiding spot he saw the rat enter and catches it there",
+    "Death and replay 1 resets controls, physics, energy and loot",
+    "Death and replay 2 resets controls, physics, energy and loot",
+    "Death and replay 3 resets controls, physics, energy and loot"
+  ],
+  "errors": []
+}

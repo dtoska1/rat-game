@@ -1,19 +1,25 @@
 {
   "name": "rat-game",
   "private": true,
-  "version": "0.5.0",
+  "version": "3.0.0",
   "description": "A very serious game about a very round rat stealing very serious pastries.",
   "type": "module",
   "scripts": {
-    "dev": "vite --host 0.0.0.0",
+    "dev": "vite --host 127.0.0.1",
     "build": "tsc --noEmit && vite build",
-    "preview": "vite preview --host 0.0.0.0",
-    "typecheck": "tsc --noEmit"
+    "preview": "vite preview --host 127.0.0.1",
+    "typecheck": "tsc --noEmit",
+    "test:game": "node tests/v3-regression.mjs && node tests/v3-route.mjs && node tests/v3-touch.mjs portrait && node tests/v3-touch.mjs landscape",
+    "build:offline": "node scripts/offline.mjs"
   },
   "dependencies": {
+    "@fontsource/dm-sans": "^5.3.0",
+    "@fontsource/young-serif": "^5.3.0",
     "phaser": "^3.90.0"
   },
   "devDependencies": {
+    "playwright": "^1.58.2",
+    "sharp": "^0.34.5",
     "typescript": "~5.8.3",
     "vite": "^7.1.0"
   }

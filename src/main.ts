@@ -1,215 +1,222 @@
 import Phaser from 'phaser';
-import { KitchenScene, releaseVirtualControls, setVirtualControl } from './game/KitchenScene';
 import './style.css';
-import './mobile-controls.css';
+import { GameScene, type Mode } from './v3/scene';
+import { Controls } from './v3/controls';
+import { Sound } from './v3/sound';
+import { HEIGHT, stations } from './v3/level';
+import ending from './v3/art/ending.webp?url';
+import happy from './v3/art/rat-idle.webp?url';
 
-// A visible diagnostic replaces the confusing all-pink screen if setup fails.
-const startupError = document.getElementById('startup-error')!;
-let sceneReady = false;
-const showStartupError = (message: string): void => {
-  if (sceneReady) return;
-  startupError.textContent = `The kitchen failed to load: ${message}. Open Chrome DevTools → Console and copy the red error if it still fails.`;
-  startupError.classList.remove('is-hidden');
+const el = <T extends HTMLElement = HTMLElement>(id: string) =>
+  document.getElementById(id) as T;
+function write(node: HTMLElement, value: string) {
+  if (node.textContent !== value) node.textContent = value;
+}
+const stage = el('stage'),
+  poster = el('poster'),
+  hud = el('hud'),
+  thumbs = el('thumbs'),
+  start = el<HTMLButtonElement>('start');
+const dialog = el<HTMLDialogElement>('guide'),
+  sound = new Sound(),
+  controls = new Controls();
+const touch = matchMedia('(pointer: coarse)'),
+  energy = el('energy-text'),
+  fill = el('energy-fill'),
+  notice = el('notice'),
+  chefStatus = el('chef-status');
+const debug = el('debug'),
+  action = el('act'),
+  stash = el('stash-count');
+const loot = Array.from(document.querySelectorAll<HTMLElement>('[data-loot]'));
+const chefWords = {
+  patrol: 'Chef on patrol',
+  suspicious: 'Chef spotted you',
+  investigate: 'Chef investigating',
+  search: 'Chef searching',
+  chase: 'Chef in pursuit!',
 };
-window.addEventListener('error', (event) => showStartupError(event.message || 'JavaScript error'));
-window.addEventListener('unhandledrejection', (event) => showStartupError(String(event.reason || 'Promise rejection')));
-window.addEventListener('ratgame:fatal', (event) => showStartupError(String((event as CustomEvent<string>).detail)));
-window.addEventListener('ratgame:ready', () => {
-  sceneReady = true;
-  startupError.classList.add('is-hidden');
-});
-window.setTimeout(() => {
-  if (!sceneReady) showStartupError('The game scene did not initialize within 8 seconds');
-}, 8000);
-
-const scene = new KitchenScene();
-const useCanvas = new URLSearchParams(window.location.search).get('renderer') === 'canvas';
-const gameContainer = document.getElementById('game')!;
+let previous: Mode | undefined;
+const scene = new GameScene(controls, sound, refresh);
+function refresh() {
+  const { mode, rat, chef, pantry } = scene;
+  if (previous !== mode) {
+    stage.dataset.mode = mode;
+    poster.hidden = mode !== 'title';
+    hud.hidden = mode !== 'play' && mode !== 'caught';
+    thumbs.hidden = !touch.matches || mode !== 'play';
+    el('outcome').hidden = !['lost', 'won', 'pause'].includes(mode);
+    if (mode === 'title') {
+      start.disabled = false;
+      write(start, 'Start heist   →');
+    }
+    if (mode === 'pause' || mode === 'lost' || mode === 'won') {
+      const lost = mode === 'lost',
+        won = mode === 'won';
+      write(
+        el('end-kicker'),
+        lost ? 'Today’s special' : won ? 'Home, sweet home' : 'Kitchen break'
+      );
+      write(
+        el('end-title'),
+        lost ? 'Rat à la mode' : won ? 'A full pantry!' : 'Heist paused'
+      );
+      write(
+        el('end-copy'),
+        lost
+          ? 'The chef has baked you into his signature cake. At least the ears are flattering.'
+          : won
+            ? 'Three pastries safely stashed. Somewhere, a French chef is counting to ten.'
+            : 'Your rat will wait right here.'
+      );
+      write(
+        el('end-action'),
+        mode === 'pause' ? 'Back to the heist' : 'Play again  →'
+      );
+      const art = el('ending-art');
+      art.replaceChildren();
+      if (mode !== 'pause') {
+        const img = new Image();
+        img.src = lost ? ending : happy;
+        img.alt = '';
+        art.append(img);
+      }
+      el('restart').hidden = mode !== 'pause';
+      el('end-action').focus({ preventScroll: true });
+    }
+    previous = mode;
+  }
+  if (mode === 'play') {
+    const pct = Math.floor(rat.energy);
+    write(energy, pct + '%');
+    if (fill.style.width !== pct + '%') fill.style.width = pct + '%';
+    write(chefStatus, chefWords[chef.mode]);
+    chefStatus.classList.toggle('danger', chef.mode === 'chase');
+    const message =
+      pantry.messageTime > 0
+        ? pantry.message
+        : rat.hidden && rat.hidden !== 'Home'
+          ? 'Hidden · ' + rat.hidden
+          : rat.carried
+            ? 'Carrying ' + rat.carried.name + '   ·   Home →'
+            : rat.energy === 100
+              ? 'Full belly · look for a whole pastry'
+              : rat.x > 2740
+                ? '← Pastry tables'
+                : rat.y > 450 &&
+                    stations.some((s) => Math.abs(rat.x - s.x) < 300)
+                  ? 'Jump onto the mint stool, then climb the ladder'
+                  : '';
+    write(notice, message);
+    notice.hidden = !message;
+    const choice = pantry.choose(rat);
+    const short = {
+      emerge: 'Leave',
+      deliver: 'Stash',
+      steal: 'Take',
+      sample: 'Taste',
+      hide: 'Hide',
+      clang: 'Clang',
+      hungry: 'Action',
+      none: 'Action',
+    };
+    write(action, short[choice.action]);
+  }
+  write(stash, pantry.delivered.size + ' of 3 pastries');
+  write(el('short-stash'),'Home stash '+pantry.delivered.size+' / 3');
+  loot.forEach((n) => {
+    const done = pantry.delivered.has(
+      n.dataset.loot as (typeof stations)[number]['kind']
+    );
+    n.classList.toggle('stored', done);
+    write(n.querySelector('i')!, done ? '✓' : '○');
+  });
+  if (scene.debug && mode === 'play') {
+    debug.hidden = false;
+    write(
+      debug,
+      Math.round(scene.game.loop.actualFps) +
+        ' fps · ' +
+        scene.game.loop.rawDelta.toFixed(1) +
+        ' ms/frame\n' +
+        controls.names().join(' + ')
+    );
+  } else debug.hidden = true;
+}
+function logicalWidth() {
+  return Math.min(
+    1720,
+    Math.max(355, Math.round((stage.clientWidth / stage.clientHeight) * HEIGHT))
+  );
+}
+const renderer =
+  new URLSearchParams(location.search).get('renderer') === 'webgl'
+    ? Phaser.AUTO
+    : Phaser.CANVAS;
 const game = new Phaser.Game({
-  // WebGL accelerates rendering on mobile; Phaser falls back to Canvas when unavailable.
-  // Add ?renderer=canvas to the URL if a particular device has WebGL trouble.
-  type: useCanvas ? Phaser.CANVAS : Phaser.AUTO,
-  parent: 'game',
-  width: Math.max(320, gameContainer.clientWidth),
-  height: Math.max(280, gameContainer.clientHeight),
-  backgroundColor: '#ffe5d7',
-  render: { antialias: !window.matchMedia('(pointer: coarse)').matches, pixelArt: false, powerPreference: 'high-performance' },
-  fps: { target: 60, forceSetTimeOut: false },
-  physics: { default: 'arcade', arcade: { debug: false, gravity: { x: 0, y: 1120 } } },
-  // Resize the world to fit a phone screen rather than shrinking the entire desktop room.
-  scale: { mode: Phaser.Scale.RESIZE, autoCenter: Phaser.Scale.NO_CENTER },
+  type: renderer,
+  parent: 'world',
+  width: logicalWidth(),
+  height: HEIGHT,
+  backgroundColor: '#f1cc9b',
   scene: [scene],
+  scale: { mode: Phaser.Scale.NONE },
+  render: { antialias: true, roundPixels: true, powerPreference: 'low-power' },
+  fps: { target: 60, forceSetTimeOut: false },
+  audio: { noAudio: true },
+  banner: false,
 });
-
-const dialog = document.getElementById('dialog')!;
-const dialogIcon = document.getElementById('dialog-icon')!;
-const dialogKicker = document.getElementById('dialog-kicker')!;
-const dialogTitle = document.getElementById('dialog-title')!;
-const dialogDescription = document.getElementById('dialog-description')!;
-const actionButton = document.getElementById('action-button') as HTMLButtonElement;
-const restartDialogButton = document.getElementById('restart-dialog-btn') as HTMLButtonElement;
-type DialogMode = 'intro' | 'paused' | 'won' | 'lost';
-let dialogMode: DialogMode = 'intro';
-
-interface DialogData { mode: DialogMode; icon: string; kicker: string; title: string; description: string; button: string }
-function showDialog(data: DialogData): void {
-  dialogMode = data.mode;
-  dialogIcon.textContent = data.icon;
-  dialogKicker.textContent = data.kicker;
-  dialogTitle.textContent = data.title;
-  dialogDescription.textContent = data.description;
-  actionButton.textContent = data.button;
-  restartDialogButton.hidden = data.mode !== 'paused';
-  dialog.classList.remove('is-hidden');
-  if (data.mode !== 'intro' && data.mode !== 'paused') resetAllControls();
+const fit = () => {
+  if (!game.scale.canvas) return;
+  const w = logicalWidth();
+  if (w !== game.scale.width) game.scale.resize(w, HEIGHT);
+};
+new ResizeObserver(fit).observe(stage);
+game.events.once(Phaser.Core.Events.READY, fit);
+touch.addEventListener('change', () => {
+  thumbs.hidden = !touch.matches || scene.mode !== 'play';
+});
+start.onclick = () => scene.start();
+el('pause').onclick = () => scene.pause();
+el('end-action').onclick = () =>
+  scene.mode === 'pause' ? scene.pause() : scene.start();
+el('restart').onclick = () => scene.start();
+function soundLabel() {
+  write(el('sound'), sound.muted ? '♪  Sound off' : '♫  Sound on');
+  el('sound').setAttribute('aria-pressed', String(!sound.muted));
 }
-function hideDialog(): void { dialog.classList.add('is-hidden'); }
-function currentScene(): KitchenScene { return game.scene.getScene('KitchenScene') as KitchenScene; }
-
-window.addEventListener('ratgame:dialog', (event) => {
-  showDialog((event as CustomEvent<DialogData>).detail);
+soundLabel();
+el('sound').onclick = () => {
+  sound.toggle();
+  soundLabel();
+};
+let resumeOnClose = false;
+el('guide-open').onclick = () => {
+  resumeOnClose = scene.mode === 'play';
+  if (resumeOnClose) scene.pause();
+  dialog.showModal();
+};
+el('guide-close').onclick = el('guide-done').onclick = () => dialog.close();
+dialog.addEventListener('close', () => {
+  if (resumeOnClose && scene.mode === 'pause') scene.pause();
+  resumeOnClose = false;
 });
-window.addEventListener('ratgame:pause-request', pauseToggle);
-
-function pauseToggle(): void {
-  if (dialogMode === 'won' || dialogMode === 'lost') return;
-  if (dialogMode === 'paused') {
-    dialogMode = 'intro';
-    hideDialog();
-    game.scene.resume('KitchenScene');
-    return;
+window.addEventListener('keydown', (e) => {
+  if (e.code === 'Escape' && !dialog.open && !e.repeat) {
+    e.preventDefault();
+    scene.pause();
   }
-  if (!dialog.classList.contains('is-hidden')) return;
-  game.scene.pause('KitchenScene');
-  showDialog({ mode: 'paused', icon: '🐀', kicker: 'THE RAT IS THINKING', title: 'PAUSED.',
-    description: 'The chef is also frozen in time. Do not tell him.', button: 'RESUME CHAOS' });
-}
-
-function restart(): void {
-  resetAllControls();
-  // Clear any button that was still held when the previous round ended.
-  document.querySelectorAll<HTMLButtonElement>('[data-hold]').forEach((button) => {
-    button.classList.remove('pressed');
-  });
-  dialogMode = 'intro';
-  hideDialog();
-
-  // Wait for this scene's own ready signal, instead of guessing that the
-  // first global POST_STEP means its controls and physics are initialized.
-  // Register BEFORE starting so a synchronous create() can't be missed.
-  window.addEventListener('ratgame:ready', () => currentScene().startPlaying(), { once: true });
-  game.scene.stop('KitchenScene');
-  game.scene.start('KitchenScene');
-}
-
-actionButton.addEventListener('click', () => {
-  if (dialogMode === 'paused') { pauseToggle(); return; }
-  if (dialogMode === 'won' || dialogMode === 'lost') { restart(); return; }
-  hideDialog();
-  currentScene().startPlaying();
 });
-
-document.getElementById('pause-btn')!.addEventListener('click', pauseToggle);
-document.getElementById('pause-mobile-btn')!.addEventListener('click', pauseToggle);
-restartDialogButton.addEventListener('click', restart);
-document.getElementById('restart-btn')!.addEventListener('click', restart);
-
-document.getElementById('how-to-btn')!.addEventListener('click', () => {
-  document.getElementById('instructions')!.scrollIntoView({ behavior: 'smooth', block: 'center' });
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && scene.mode === 'play') scene.pause();
 });
-
-// Multi-touch: each pointer is independent; movement + jumping/boost work together.
-const heldControls: Array<() => void> = [];
-const gameIsActive = (): boolean => dialog.classList.contains('is-hidden');
-for (const button of document.querySelectorAll<HTMLButtonElement>('[data-hold]')) {
-  const control = button.dataset.hold as 'left' | 'right' | 'up' | 'boost';
-  const pointers = new Set<number>();
-  const reset = () => {
-    pointers.clear();
-    setVirtualControl(control, false);
-    button.classList.remove('pressed');
-  };
-  heldControls.push(reset);
-  button.addEventListener('pointerdown', (event: PointerEvent) => {
-    if (!gameIsActive()) return;
-    event.preventDefault();
-    try { button.setPointerCapture(event.pointerId); } catch { /* capture unavailable */ }
-    pointers.add(event.pointerId);
-    setVirtualControl(control, true);
-    button.classList.add('pressed');
+if (scene.debug) {
+  Object.defineProperty(window, 'ratPlaytest', {
+    value: Object.freeze({
+      read: () => scene.snapshot(),
+      timing: () => scene.timing(),
+      renderer: () =>
+        game.renderer.type === Phaser.WEBGL ? 'WebGL' : 'Canvas',
+    }),
   });
-  const release = (event: PointerEvent) => {
-    event.preventDefault();
-    pointers.delete(event.pointerId);
-    const held = pointers.size > 0;
-    setVirtualControl(control, held);
-    button.classList.toggle('pressed', held);
-  };
-  button.addEventListener('pointerup', release);
-  button.addEventListener('pointercancel', release);
-  button.addEventListener('lostpointercapture', release);
 }
-for (const button of document.querySelectorAll<HTMLButtonElement>('[data-tap]')) {
-  const act = () => {
-    if (!gameIsActive()) return;
-    const scene = currentScene();
-    switch (button.dataset.tap) {
-      case 'jump': scene.virtualJump(); break;
-      case 'climb': scene.virtualClimb(); break;
-      case 'interact': scene.virtualInteract(); break;
-      case 'hide': scene.virtualHide(); break;
-    }
-  };
-  button.addEventListener('pointerdown', (event: PointerEvent) => {
-    event.preventDefault();
-    try { button.setPointerCapture(event.pointerId); } catch { /* capture unavailable */ }
-    button.classList.add('pressed');
-    act();
-  });
-  for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) {
-    button.addEventListener(type, () => button.classList.remove('pressed'));
-  }
-  // Pointerdown prevents synthetic clicks; keep keyboard activation.
-  button.addEventListener('click', (event: MouseEvent) => { if (event.detail === 0) act(); });
-}
-
-const fullscreenButton = document.getElementById('fullscreen-btn') as HTMLButtonElement;
-const fullscreenTarget = document.getElementById('game-shell')!;
-if (!document.fullscreenEnabled || !fullscreenTarget.requestFullscreen) fullscreenButton.hidden = true;
-fullscreenButton.addEventListener('click', async () => {
-  try {
-    if (document.fullscreenElement) await document.exitFullscreen();
-    else await fullscreenTarget.requestFullscreen();
-  } catch (error) { console.info('Fullscreen unavailable:', error); }
-});
-const mobileHint = document.getElementById('rotate-tip');
-document.getElementById('dismiss-rotate-tip')?.addEventListener('click', () => mobileHint?.classList.add('is-dismissed'));
-function resetAllControls(): void {
-  heldControls.forEach(reset => reset());
-  releaseVirtualControls();
-}
-// Prevent arrows / Space from scrolling the page during gameplay.
-window.addEventListener('keydown', (event) => {
-  if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space', ' '].includes(event.key) &&
-      dialog.classList.contains('is-hidden')) event.preventDefault();
-}, { passive: false });
-// Frame rate is measured in the real browser rather than inferred from code.
-const fpsLabel = document.getElementById('performance-indicator');
-let frames = 0;
-let lastFPSUpdate = performance.now();
-function samplePerformance(now: number): void {
-  frames++;
-  if (now - lastFPSUpdate >= 1000) {
-    const fps = Math.round(frames * 1000 / (now - lastFPSUpdate));
-    if (fpsLabel) {
-      fpsLabel.textContent = `FPS ${fps}`;
-      fpsLabel.classList.toggle('performance-slow', fps < 40);
-    }
-    frames = 0;
-    lastFPSUpdate = now;
-  }
-  requestAnimationFrame(samplePerformance);
-}
-requestAnimationFrame(samplePerformance);
-window.addEventListener('blur', resetAllControls);
-document.addEventListener('visibilitychange', () => { if (document.hidden) resetAllControls(); });
