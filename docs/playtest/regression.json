@@ -1,0 +1,18 @@
+{
+  "checks": [
+    "No spawn win or right + action shortcut",
+    "Pressing the opposite direction reverses immediately while both keys overlap",
+    "A short Space press from directly underneath lands on the stool",
+    "A short ArrowUp press from directly underneath lands on the stool",
+    "A short w press from directly underneath lands on the stool",
+    "Across the room on foot, the rat stays on the floor. Action under the pastry hides without eating or stealing.",
+    "Pause freezes the simulation and resumes normally",
+    "Teapot blocks a facing chef’s sightline at patrol range. Hidden rat survives a close pass.",
+    "First clear sight to pursuit: 200 ms of play time",
+    "Chef investigates the exact hiding spot he saw the rat enter and catches it there",
+    "Death and replay 1 resets controls, physics, energy and loot",
+    "Death and replay 2 resets controls, physics, energy and loot",
+    "Death and replay 3 resets controls, physics, energy and loot"
+  ],
+  "errors": []
+}

@@ -1,25 +1,44 @@
-name: Verify game build
-
+name: Kitchen playtest
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
-
+  workflow_dispatch:
 permissions:
   contents: read
-
 jobs:
-  build:
+  play:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'npm'
-          cache-dependency-path: package.json
-      - name: Install dependencies
-        run: npm install --no-audit --no-fund
-      - name: Type-check and build
-        run: npm run build
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium webkit
+      - name: Start the local preview
+        run: |
+          npm run preview -- --port 4318 --strictPort > /tmp/rat-preview.log 2>&1 &
+          for i in {1..30}; do curl -fsS http://127.0.0.1:4318/ > /dev/null && exit 0; sleep 1; done
+          cat /tmp/rat-preview.log
+          exit 1
+      - name: Play the kitchen with keyboard and touch
+        run: npm run test:game
+      - name: Check touch jumping and rotation in WebKit
+        run: node tests/v3-webkit.mjs
+      - run: npm run build:offline
+      - run: node tests/v3-offline.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Rat-Game-V3
+          path: preview/*.html
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: kitchen-playtest
+          path: |
+            .playtest/*.json
+            .playtest/*.png
+          include-hidden-files: true

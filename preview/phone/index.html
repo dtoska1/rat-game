@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#f6edda" />
+    <meta
+      name="description"
+      content="One round rat, three stolen pastries and a very upset French chef. A hand-drawn stealth platformer."
+    />
+    <link rel="icon" href="./assets/rat-idle-ByUfmeBC.webp" />
+    <title>Rat Game · The Great Pastry Heist</title>
+    <script type="module" crossorigin src="./assets/index-B2DuvSXO.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-CPSiPjJs.css">
+  </head>
+  <body>
+    <main class="book">
+      <header class="mast">
+        <div class="brand">
+          <img src="./assets/rat-idle-ByUfmeBC.webp" alt="" /><span>Rat Game</span>
+        </div>
+        <nav aria-label="Game settings">
+          <button id="guide-open">
+            <span aria-hidden="true">▤</span> Field guide</button
+          ><button id="sound" aria-pressed="false">Sound on</button>
+        </nav>
+      </header>
+      <section id="stage" data-mode="loading" aria-label="Kitchen game">
+        <div id="world" aria-label="Rat Game kitchen"></div>
+        <div class="poster" id="poster">
+          <div class="poster-cast" aria-hidden="true">
+            <img
+              class="hero-chef"
+              src="./assets/chef-chase-CROrrtGE.webp"
+              alt=""
+            /><img
+              class="hero-rat"
+              src="./assets/rat-jump-HmcCjvjr.webp"
+              alt=""
+            /><img class="hero-loot" src="./assets/eclair-CbLuZvvZ.webp" alt="" />
+          </div>
+          <div class="title-paper">
+            <span class="eyebrow"><i></i> The kitchen caper</span>
+            <h1>The Great<br /><em>Pastry Heist</em></h1>
+            <p>
+              Sneak past the chef and bring three pastries home to your hole.
+            </p>
+            <button class="primary" id="start" disabled>
+              Opening kitchen…
+            </button>
+          </div>
+        </div>
+        <div id="hud" hidden>
+          <div class="energy">
+            <div><span>Belly energy</span><b id="energy-text">44%</b></div>
+            <div class="meter"><i id="energy-fill"></i></div>
+              <small id="short-stash">Home stash 0 / 3</small>
+          </div>
+          <button id="pause" aria-label="Pause game">Ⅱ</button>
+          <div class="chef-status" id="chef-status"></div>
+          <div class="notice" id="notice"></div>
+        </div>
+        <div class="outcome" id="outcome" hidden>
+          <div class="outcome-paper">
+            <div id="ending-art" aria-hidden="true"></div>
+            <span class="eyebrow" id="end-kicker"></span>
+            <h2 id="end-title"></h2>
+            <p id="end-copy"></p>
+            <button class="primary" id="end-action"></button
+            ><button class="plain" id="restart" hidden>
+              Restart from home
+            </button>
+          </div>
+        </div>
+        <pre id="debug" hidden></pre>
+      </section>
+      <div id="thumbs" aria-label="Touch controls" hidden>
+        <div class="directions">
+          <button data-control="left" aria-label="Move left">←</button
+          ><button data-control="right" aria-label="Move right">→</button>
+        </div>
+        <div class="actions">
+          <button data-control="boost">Boost</button
+          ><button data-control="act" id="act">Action</button
+          ><button data-control="jump" class="jump">Jump</button>
+        </div>
+      </div>
+      <section class="pantry" aria-label="Pantry checklist">
+        <div class="pantry-title">
+          <span class="eyebrow">Home stash</span
+          ><strong id="stash-count">0 of 3 pastries</strong>
+        </div>
+        <div class="loot-list">
+          <div data-loot="eclair">
+            <img src="./assets/eclair-CbLuZvvZ.webp" alt="" /><span>Éclair</span
+            ><i>○</i>
+          </div>
+          <div data-loot="macaron">
+            <img src="./assets/macaron-DMDlx9_M.webp" alt="" /><span>Macaron</span
+            ><i>○</i>
+          </div>
+          <div data-loot="cake">
+            <img src="./assets/cake--tAKzyRH.webp" alt="" /><span
+              >Strawberry cake</span
+            ><i>○</i>
+          </div>
+        </div>
+      </section>
+      <footer class="keystrip">
+        <span><kbd>←</kbd><kbd>→</kbd> Move</span
+        ><span><kbd>Space</kbd> / <kbd>↑</kbd> Jump</span><span><kbd>↑</kbd> at ladder · Climb</span
+        ><span><kbd>E</kbd> Action</span><span><kbd>Shift</kbd> Boost</span
+        ><span><kbd>Esc</kbd> Pause</span>
+      </footer>
+    </main>
+    <dialog id="guide">
+      <article>
+        <button id="guide-close" class="close" aria-label="Close field guide">
+          ×</button
+        ><span class="eyebrow">Rat Game</span>
+        <h2>Field guide</h2>
+        <p>
+          <b>Get onto the table.</b> Leave your hole and head left. Jump onto
+          the mint stool from beside or beneath it. On a keyboard use Space, W
+          or ↑ to jump. At a ladder, tap the same Jump button to climb to the top,
+          or hold W / ↑ on a keyboard.
+        </p>
+        <p>
+          <b>Fill up and steal.</b> Use Action beside the small tasting portions
+          until your belly is full. Take the whole pastry on the other plate.
+          Come back to the hole on the right and use Action to stash it.
+        </p>
+        <p>
+          <b>Lose the chef.</b> Hide with Action inside the teapot, under a
+          table or at home. If he sees you hide, he can search there. Knock the
+          spoon to draw him away. If he reaches for you on the floor, jump his grab.
+          Boost spends belly energy.
+        </p>
+        <div class="guide-keys">
+          A / D or ← / → to walk · Space, W or ↑ to jump · W / ↑ at a ladder to climb · E for Action
+          · Shift to boost · Esc to pause
+        </div>
+        <button id="guide-done" class="primary">Got it</button>
+      </article>
+    </dialog>
+  </body>
+</html>
