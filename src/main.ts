@@ -20,7 +20,7 @@ const stage = el('stage'),
 const dialog = el<HTMLDialogElement>('guide'),
   sound = new Sound(),
   controls = new Controls();
-const touch = matchMedia('(pointer: coarse)'),
+const touch = matchMedia('(any-pointer: coarse)'),
   energy = el('energy-text'),
   fill = el('energy-fill'),
   notice = el('notice'),
@@ -28,6 +28,7 @@ const touch = matchMedia('(pointer: coarse)'),
 const debug = el('debug'),
   action = el('act'),
   stash = el('stash-count');
+const hasTouchControls = () => touch.matches || navigator.maxTouchPoints > 0;
 const loot = Array.from(document.querySelectorAll<HTMLElement>('[data-loot]'));
 const chefWords = {
   patrol: 'Chef on patrol',
@@ -44,7 +45,7 @@ function refresh() {
     stage.dataset.mode = mode;
     poster.hidden = mode !== 'title';
     hud.hidden = mode !== 'play' && mode !== 'caught';
-    thumbs.hidden = !touch.matches || mode !== 'play';
+    thumbs.hidden = !hasTouchControls() || mode !== 'play';
     el('outcome').hidden = !['lost', 'won', 'pause'].includes(mode);
     if (mode === 'title') {
       start.disabled = false;
@@ -105,7 +106,9 @@ function refresh() {
                 ? '← Pastry tables'
                 : rat.y > 450 &&
                     stations.some((s) => Math.abs(rat.x - s.x) < 300)
-                  ? 'Jump onto the mint stool, then climb the ladder'
+                  ? hasTouchControls()
+                    ? 'Tap Jump onto the stool · hold Climb at the ladder'
+                    : 'Space / ↑ to jump onto the stool · hold ↑ at the ladder'
                   : '';
     write(notice, message);
     notice.hidden = !message;
@@ -123,7 +126,7 @@ function refresh() {
     write(action, short[choice.action]);
   }
   write(stash, pantry.delivered.size + ' of 3 pastries');
-  write(el('short-stash'),'Home stash '+pantry.delivered.size+' / 3');
+  write(el('short-stash'), 'Home stash ' + pantry.delivered.size + ' / 3');
   loot.forEach((n) => {
     const done = pantry.delivered.has(
       n.dataset.loot as (typeof stations)[number]['kind']
@@ -174,7 +177,7 @@ const fit = () => {
 new ResizeObserver(fit).observe(stage);
 game.events.once(Phaser.Core.Events.READY, fit);
 touch.addEventListener('change', () => {
-  thumbs.hidden = !touch.matches || scene.mode !== 'play';
+  thumbs.hidden = !hasTouchControls() || scene.mode !== 'play';
 });
 start.onclick = () => scene.start();
 el('pause').onclick = () => scene.pause();

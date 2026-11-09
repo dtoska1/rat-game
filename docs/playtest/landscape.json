@@ -1,7 +1,7 @@
 {
   "size": {
-    "stageBottom": 326,
-    "controlsTop": 331,
+    "stageBottom": 319,
+    "controlsTop": 324,
     "controlsBottom": 376,
     "viewport": 390,
     "width": 844,
@@ -10,21 +10,43 @@
   "renderer": "Canvas",
   "events": [
     {
+      "name": "quick Jump tap from directly below",
+      "mode": "play",
+      "t": 2.97,
+      "x": 2629,
+      "y": 448,
+      "vx": 0,
+      "vy": 0,
+      "pose": "idle",
+      "hidden": "",
+      "energy": 44,
+      "carried": null,
+      "delivered": [],
+      "action": "none",
+      "chef": "patrol",
+      "chefX": 923,
+      "facing": -1,
+      "seen": false,
+      "alert": 0,
+      "held": [],
+      "last": ""
+    },
+    {
       "name": "boost drains energy",
       "mode": "play",
-      "t": 1.26,
-      "x": 2757,
+      "t": 1.17,
+      "x": 2759,
       "y": 530,
       "vx": 0,
       "vy": 0,
       "pose": "idle",
       "hidden": "",
-      "energy": 25,
+      "energy": 26,
       "carried": null,
       "delivered": [],
       "action": "none",
       "chef": "patrol",
-      "chefX": 973,
+      "chefX": 981,
       "facing": -1,
       "seen": false,
       "alert": 0,
@@ -34,14 +56,14 @@
     {
       "name": "manual climb",
       "mode": "play",
-      "t": 2.91,
+      "t": 2.86,
       "x": 2575,
       "y": 371,
       "vx": 0,
       "vy": 0,
       "pose": "idle",
       "hidden": "",
-      "energy": 25,
+      "energy": 26,
       "carried": null,
       "delivered": [],
       "action": "none",
@@ -56,7 +78,7 @@
     {
       "name": "carrying untouched éclair",
       "mode": "play",
-      "t": 7.84,
+      "t": 7.78,
       "x": 2313,
       "y": 371,
       "vx": 0,
@@ -68,7 +90,7 @@
       "delivered": [],
       "action": "none",
       "chef": "patrol",
-      "chefX": 1309,
+      "chefX": 1303,
       "facing": 1,
       "seen": false,
       "alert": 0,
@@ -78,8 +100,8 @@
     {
       "name": "separate home delivery",
       "mode": "play",
-      "t": 12.82,
-      "x": 3099,
+      "t": 12.79,
+      "x": 3101,
       "y": 530,
       "vx": 0,
       "vy": 0,
@@ -92,7 +114,7 @@
       ],
       "action": "emerge",
       "chef": "patrol",
-      "chefX": 1748,
+      "chefX": 1745,
       "facing": 1,
       "seen": false,
       "alert": 0,
@@ -102,7 +124,7 @@
     {
       "name": "replay releases old touch",
       "mode": "play",
-      "t": 0.29,
+      "t": 0.31,
       "x": 3100,
       "y": 530,
       "vx": 0,
@@ -123,14 +145,14 @@
     }
   ],
   "timing": {
-    "movingFrames": 503,
+    "movingFrames": 504,
     "intervalMs": {
       "median": 16.7,
       "p95": 16.8
     },
     "gameStepMs": {
       "median": 0.5,
-      "p95": 0.8
+      "p95": 0.9
     },
     "rendererSubmitMs": {
       "median": 0.3,

@@ -20,6 +20,8 @@
 }
 body {
   margin: 0;
+  padding-inline: env(safe-area-inset-left) env(safe-area-inset-right);
+  padding-bottom: env(safe-area-inset-bottom);
   min-height: 100svh;
   background:
     radial-gradient(ellipse at top, #fff9ef 0%, transparent 72%),
@@ -487,6 +489,8 @@ kbd {
 }
 .actions .jump {
   background: var(--pink);
+  min-width: clamp(54px, 12vw, 80px);
+  font-size: 14px;
 }
 .actions button[data-control='act'] {
   background: #bedcc2;
@@ -530,7 +534,7 @@ dialog p {
   font-size: 13px;
   color: #745a4b;
 }
-@media (pointer: coarse) {
+@media (any-pointer: coarse) {
   .keystrip {
     display: none;
   }
@@ -704,7 +708,7 @@ dialog p {
     padding: 3px 8px;
   }
   #stage {
-    height: calc(100svh - 99px);
+    height: calc(100svh - 106px - env(safe-area-inset-bottom));
     max-height: none;
     aspect-ratio: auto;
   }
@@ -745,7 +749,7 @@ dialog p {
   }
   .directions button,
   .actions button {
-    height: 45px;
+    height: 52px;
     min-width: 57px;
   }
 }

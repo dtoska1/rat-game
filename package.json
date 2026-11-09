@@ -10,7 +10,8 @@
     "preview": "vite preview --host 127.0.0.1",
     "typecheck": "tsc --noEmit",
     "test:game": "node tests/v3-regression.mjs && node tests/v3-route.mjs && node tests/v3-touch.mjs portrait && node tests/v3-touch.mjs landscape",
-    "build:offline": "node scripts/offline.mjs"
+    "build:offline": "node scripts/offline.mjs",
+    "build:phone": "vite build --outDir preview/phone --emptyOutDir"
   },
   "dependencies": {
     "@fontsource/dm-sans": "^5.3.0",

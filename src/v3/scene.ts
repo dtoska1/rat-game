@@ -48,7 +48,7 @@ export class GameScene extends Phaser.Scene {
   private renderMark = 0;
   private samples: number[][] = [];
   private moving = false;
-  private coarse = matchMedia('(pointer:coarse)');
+  private coarse = matchMedia('(any-pointer:coarse)');
   readonly debug = new URLSearchParams(location.search).has('debug');
   constructor(
     public controls: Controls,
@@ -97,7 +97,11 @@ export class GameScene extends Phaser.Scene {
       .setScrollFactor(0)
       .setDepth(-2);
     for (const s of stations) {
-      const tableFrame={eclair:'table',macaron:'mint-table',cake:'lilac-table'}[s.kind];
+      const tableFrame = {
+        eclair: 'table',
+        macaron: 'mint-table',
+        cake: 'lilac-table',
+      }[s.kind];
       this.art(tableFrame, s.x, FLOOR, s.width, FLOOR - s.top);
       this.art('stool', stool(s), FLOOR, 142, FLOOR - STOOL_Y, 4);
       this.art('ladder', rack(s), STOOL_Y + 3, 46, STOOL_Y - s.top + 6, 4);
@@ -126,7 +130,9 @@ export class GameScene extends Phaser.Scene {
     }
     this.art('home', HOME, FLOOR + 4, 162, 116, 3);
     this.label(HOME, FLOOR - 119, 'HOME', 13);
-    this.containerArt=containers.map(p=>this.art(p.frame,p.x,FLOOR+1,p.width,p.height,5));
+    this.containerArt = containers.map((p) =>
+      this.art(p.frame, p.x, FLOOR + 1, p.width, p.height, 5)
+    );
     this.spoon = this.art('spoon', SPOON, FLOOR, 89, 96, 4);
     this.chefArt = this.art('chef-walk', this.chef.x, FLOOR, 160, 215, 5);
     this.ratArt = this.art('rat-idle', HOME, FLOOR, 68, 59, 7);
@@ -232,6 +238,7 @@ export class GameScene extends Phaser.Scene {
     this.runTime += dt;
     p.clang = Math.max(0, p.clang - dt);
     p.messageTime = Math.max(0, p.messageTime - dt);
+    const chefMode = this.chef.mode;
     const vy = r.vy,
       boost = r.boosting;
     r.update(dt, this.controls);
@@ -244,6 +251,7 @@ export class GameScene extends Phaser.Scene {
       this.mode = 'caught';
       this.sfx.play('caught');
     }
+    if (this.chef.mode !== chefMode && this.mode === 'play') this.onChange();
     if (this.mode !== 'play') {
       this.controls.clear();
       this.controls.enabled = false;
@@ -307,19 +315,21 @@ export class GameScene extends Phaser.Scene {
               ? (3 + bob * 3) * r.facing
               : 0
       );
-    this.containerArt.forEach((image,i)=>{
-      const depth=r.hidden===containers[i].name?9:5;
-      if(image.depth!==depth)image.setDepth(depth);
+    this.containerArt.forEach((image, i) => {
+      const depth = r.hidden === containers[i].name ? 9 : 5;
+      if (image.depth !== depth) image.setDepth(depth);
     });
     this.chefArt
       .setFrame(
         this.mode === 'caught'
           ? 'chef-bake'
-          : c.mode === 'chase'
-            ? 'chef-chase'
-            : c.mode === 'patrol'
-              ? 'chef-walk'
-              : 'chef-search'
+          : c.grab > 0
+            ? 'chef-search'
+            : c.mode === 'chase'
+              ? 'chef-chase'
+              : c.mode === 'patrol'
+                ? 'chef-walk'
+                : 'chef-search'
       )
       .setDisplaySize(c.mode === 'chase' ? 214 : 174, 217)
       .setFlipX(c.facing < 0)
@@ -327,13 +337,15 @@ export class GameScene extends Phaser.Scene {
       .setAngle(Math.sin(c.phase) * 2);
     this.chefSign.setVisible(c.mode !== 'patrol').setPosition(c.x, FLOOR - 222);
     const sign =
-      c.mode === 'chase'
-        ? '!'
-        : c.mode === 'investigate' && this.pantry.clang > 0
-          ? 'CLANG?'
-          : c.mode === 'search'
-            ? '…'
-            : '?';
+      c.grab > 0
+        ? 'Grab!'
+        : c.mode === 'chase'
+          ? '!'
+          : c.mode === 'investigate' && this.pantry.clang > 0
+            ? 'CLANG?'
+            : c.mode === 'search'
+              ? '…'
+              : '?';
     if (this.chefSign.text !== sign) this.chefSign.setText(sign);
     this.spoon.setAngle(
       this.pantry.clang > 6 ? Math.sin(this.pantry.clang * 18) * 8 : 0

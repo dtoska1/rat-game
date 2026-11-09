@@ -14,6 +14,9 @@ export class Chef {
   alert = 0;
   phase = 0;
   seen = false;
+  grab = 0;
+  private recovery = 0;
+  private reach = 0;
   private waypoint = 0;
   private wait = 0.5;
   private goal = this.x;
@@ -23,11 +26,13 @@ export class Chef {
   private searchX = 0;
   distract(x: number) {
     this.goal = x;
+    this.facing = Math.sign(x - this.x) || this.facing;
     this.mode = 'investigate';
     this.wait = 0;
     this.lock = 3.2;
     this.alert = 0;
     this.searched = '';
+    this.grab = 0;
   }
   private move(goal: number, speed: number, dt: number) {
     const dx = goal - this.x;
@@ -42,6 +47,7 @@ export class Chef {
     const dx = r.x - this.x,
       distance = Math.abs(dx);
     this.lock = Math.max(0, this.lock - dt);
+    this.recovery = Math.max(0, this.recovery - dt);
     this.seen =
       !r.hidden &&
       r.x < HOME - 100 &&
@@ -49,7 +55,7 @@ export class Chef {
       distance < (r.boosting ? 440 : 365) &&
       !blocksSight(this.x, FLOOR - 150, r.x, r.y - 23);
     if (this.seen && !this.lock) {
-      this.alert = Math.min(1, this.alert + dt * (distance < 95 ? 1.45 : 0.53));
+      this.alert = distance < 165 ? 1 : Math.min(1, this.alert + dt / 0.18);
       this.goal = r.x;
       this.lost = 0;
       this.searched = '';
@@ -60,7 +66,7 @@ export class Chef {
       this.lost += dt;
       if (
         (this.mode === 'chase' && this.lost > 0.7) ||
-        (this.mode === 'suspicious' && this.lost > 1)
+        (this.mode === 'suspicious' && this.lost > 0.3)
       ) {
         this.mode = 'investigate';
         this.wait = 0;
@@ -81,11 +87,34 @@ export class Chef {
         }
         break;
       case 'suspicious':
-        this.facing = Math.sign(dx) || this.facing;
+        this.move(this.goal, 168, dt);
         break;
-      case 'chase':
-        this.move(Math.min(HOME - 120, this.goal), 248, dt);
+      case 'chase': {
+        if (this.grab > 0) {
+          this.grab = Math.max(0, this.grab - dt);
+          if (this.grab === 0) {
+            this.recovery = 0.48;
+            if (this.seen && distance < 62 && FLOOR - r.y < this.reach)
+              return true;
+          }
+        } else if (
+          this.seen &&
+          distance <= 65 &&
+          !this.recovery &&
+          FLOOR - r.y < 216
+        ) {
+          this.grab = 0.22;
+          // A grab aimed at the floor can be jumped. A rat perched on a low table can be reached.
+          this.reach = r.grounded && r.y < FLOOR - 40 ? 216 : 85;
+        } else {
+          this.move(
+            Math.min(HOME - 120, this.goal),
+            this.recovery > 0 ? 125 : 248,
+            dt
+          );
+        }
         break;
+      }
       case 'investigate':
         if (this.move(this.goal, 142, dt)) {
           this.mode = 'search';
@@ -109,11 +138,6 @@ export class Chef {
         }
         break;
     }
-    return (
-      this.mode === 'chase' &&
-      this.seen &&
-      distance < 34 &&
-      Math.abs(FLOOR - r.y) < 216
-    );
+    return false;
   }
 }

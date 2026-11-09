@@ -1,11 +1,18 @@
-export type Control = 'left' | 'right' | 'jump' | 'climb' | 'act' | 'boost';
+export type Control =
+  | 'left'
+  | 'right'
+  | 'jump'
+  | 'up'
+  | 'climb'
+  | 'act'
+  | 'boost';
 const mapping: Record<string, Control> = {
   ArrowLeft: 'left',
   KeyA: 'left',
   ArrowRight: 'right',
   KeyD: 'right',
-  ArrowUp: 'climb',
-  KeyW: 'climb',
+  ArrowUp: 'up',
+  KeyW: 'up',
   Space: 'jump',
   KeyE: 'act',
   ShiftLeft: 'boost',
@@ -24,6 +31,9 @@ export class Controls {
     });
     window.addEventListener('keyup', (e) => this.release(e.code));
     window.addEventListener('blur', () => this.clear());
+    const releasePointer = (e: PointerEvent) => this.release('p' + e.pointerId);
+    window.addEventListener('pointerup', releasePointer);
+    window.addEventListener('pointercancel', releasePointer);
     for (const button of document.querySelectorAll<HTMLButtonElement>(
       '[data-control]'
     )) {
@@ -31,19 +41,29 @@ export class Controls {
       button.onpointerdown = (e) => {
         if (!this.enabled) return;
         e.preventDefault();
-        button.setPointerCapture(e.pointerId);
         this.press('p' + e.pointerId, name);
+        if (button.setPointerCapture) {
+          try {
+            button.setPointerCapture(e.pointerId);
+          } catch {
+            /* Window-level release still clears this pointer. */
+          }
+        }
       };
-      const release = (e: PointerEvent) => this.release('p' + e.pointerId);
-      button.onpointerup =
-        button.onpointercancel =
-        button.onlostpointercapture =
-          release;
+      button.onlostpointercapture = releasePointer;
     }
   }
   down(c: Control) {
     for (const name of this.held.values()) if (name === c) return true;
     return false;
+  }
+  direction() {
+    let direction = 0;
+    for (const control of this.held.values()) {
+      if (control === 'left') direction = -1;
+      if (control === 'right') direction = 1;
+    }
+    return direction;
   }
   take(c: Control) {
     return this.edges.delete(c);

@@ -10,10 +10,32 @@
   "renderer": "Canvas",
   "events": [
     {
+      "name": "quick Jump tap from directly below",
+      "mode": "play",
+      "t": 2.99,
+      "x": 2629,
+      "y": 448,
+      "vx": 0,
+      "vy": 0,
+      "pose": "idle",
+      "hidden": "",
+      "energy": 44,
+      "carried": null,
+      "delivered": [],
+      "action": "none",
+      "chef": "patrol",
+      "chefX": 923,
+      "facing": -1,
+      "seen": false,
+      "alert": 0,
+      "held": [],
+      "last": ""
+    },
+    {
       "name": "boost drains energy",
       "mode": "play",
-      "t": 1.22,
-      "x": 2757,
+      "t": 1.17,
+      "x": 2756,
       "y": 530,
       "vx": 0,
       "vy": 0,
@@ -24,7 +46,7 @@
       "delivered": [],
       "action": "none",
       "chef": "patrol",
-      "chefX": 976,
+      "chefX": 981,
       "facing": -1,
       "seen": false,
       "alert": 0,
@@ -34,7 +56,7 @@
     {
       "name": "manual climb",
       "mode": "play",
-      "t": 2.87,
+      "t": 2.86,
       "x": 2575,
       "y": 371,
       "vx": 0,
@@ -56,7 +78,7 @@
     {
       "name": "carrying untouched éclair",
       "mode": "play",
-      "t": 7.76,
+      "t": 7.71,
       "x": 2313,
       "y": 371,
       "vx": 0,
@@ -68,7 +90,7 @@
       "delivered": [],
       "action": "none",
       "chef": "patrol",
-      "chefX": 1302,
+      "chefX": 1297,
       "facing": 1,
       "seen": false,
       "alert": 0,
@@ -78,8 +100,8 @@
     {
       "name": "separate home delivery",
       "mode": "play",
-      "t": 12.74,
-      "x": 3099,
+      "t": 12.67,
+      "x": 3098,
       "y": 530,
       "vx": 0,
       "vy": 0,
@@ -92,7 +114,7 @@
       ],
       "action": "emerge",
       "chef": "patrol",
-      "chefX": 1740,
+      "chefX": 1734,
       "facing": 1,
       "seen": false,
       "alert": 0,
@@ -102,7 +124,7 @@
     {
       "name": "replay releases old touch",
       "mode": "play",
-      "t": 0.29,
+      "t": 0.33,
       "x": 3100,
       "y": 530,
       "vx": 0,
@@ -123,18 +145,18 @@
     }
   ],
   "timing": {
-    "movingFrames": 502,
+    "movingFrames": 503,
     "intervalMs": {
       "median": 16.7,
       "p95": 16.7
     },
     "gameStepMs": {
-      "median": 0.4,
-      "p95": 0.7
+      "median": 0.5,
+      "p95": 0.8
     },
     "rendererSubmitMs": {
       "median": 0.3,
-      "p95": 0.4
+      "p95": 0.5
     }
   },
   "browserErrors": []

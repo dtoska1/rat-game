@@ -4,7 +4,9 @@ A chubby rat, a human pastry chef and one hand-drawn kitchen. Slip out of the ho
 
 ## Play the preview
 
-Download the [V3 preview ZIP](https://github.com/dtoska1/rat-game/raw/refs/heads/v3-rebuild/preview/Rat-Game-V3.zip), extract it, and open **Rat Game V3.html** in a desktop browser. The file bundles the game, artwork, fonts and sound. You can also generate it with `npm ci` and `npm run build:offline`. To run the project locally with Node 22.12 or later:
+Open the [playable branch preview](https://raw.githack.com/dtoska1/rat-game/v3-rebuild/preview/phone/index.html) in your phone or desktop browser. Press **Start heist**. On a phone, hold a direction with one thumb and tap **Jump** with the other. Landscape shows more of the kitchen.
+
+For offline desktop play, download the [V3 preview ZIP](https://github.com/dtoska1/rat-game/raw/refs/heads/v3-rebuild/preview/Rat-Game-V3.zip), extract it, and open **Rat Game V3.html**. To run the project locally with Node 22.12 or later:
 
 ```sh
 npm ci
@@ -13,14 +15,14 @@ npm run dev
 
 ## The kitchen
 
-Move left from home. Jump onto the **mint stool from the side**, walk to the ladder and hold Climb. Use Action beside a small tasting portion to refill your energy. The three samples restore 24, 17 and 37 points respectively. At 100%, take the whole pastry on the other plate. Carry it back to the hole and use Action to stash it. Heavier pastries slow you down.
+Move left from home. Tap Jump to land on the **mint stool**, even from directly underneath. Walk to the ladder and hold Climb. Use Action beside a small tasting portion to refill your energy. The three samples restore 24, 17 and 37 points respectively. At 100%, take the whole pastry on the other plate. Carry it back to the hole and use Action to stash it. Heavier pastries slow you down.
 
 The chef follows a patrol and needs a clear view to spot you. Hide under a table, inside the blue teapot or in the hole. If he watches you disappear, he can investigate that spot. Knocking the spoon brings him to its location. Boost briefly to cross a dangerous sightline, then eat to refill.
 
 | Action | Keyboard | Touch |
 | --- | --- | --- |
 | Walk | A / D or left / right arrows | Left / right |
-| Variable-height jump | Hold Space | Hold Jump |
+| Jump | Space, W or ↑. Hold for a higher jump. | Tap Jump, or hold for more height |
 | Climb at a ladder | Hold W or up arrow | Hold Climb |
 | Taste, take, stash, hide or emerge | E | Contextual Action |
 | Boost | Hold Shift while moving | Hold Boost while moving |

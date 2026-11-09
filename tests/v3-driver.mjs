@@ -3,11 +3,11 @@ import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 export const out = process.env.TEST_OUT || '.playtest';
 export const url = process.env.TARGET_URL || 'http://127.0.0.1:4318/';
-export async function openGame(view = 'desktop') {
+export async function openGame(view = 'desktop', engine = chromium) {
   await mkdir(out, { recursive: true });
-  const browser = await chromium.launch({
+  const browser = await engine.launch({
     headless: true,
-    args: ['--enable-unsafe-swiftshader'],
+    args: engine === chromium ? ['--enable-unsafe-swiftshader'] : [],
   });
   const size =
     view === 'portrait'

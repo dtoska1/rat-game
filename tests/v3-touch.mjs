@@ -77,6 +77,16 @@ try {
     'whole touch deck fits below game'
   );
   assert.ok(sizes.width <= sizes.viewportWidth, 'no horizontal scrolling');
+  await walk(2641);
+  await hold('jump');
+  await stop();
+  await g.wait((s) => s.y < 448, 'a touch tap from below clears the stool');
+  await g.wait(
+    (s) => s.y === 448 && s.vy === 0,
+    'touch tap lands on the stool'
+  );
+  await record('quick Jump tap from directly below');
+  await g.reset();
   await walk(2792, true);
   const boosted = await record('boost drains energy');
   assert.ok(boosted.energy < 44 && boosted.energy > 0);

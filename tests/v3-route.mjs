@@ -36,6 +36,10 @@ async function cross(goal, ringSpoon = false) {
         else await g.page.keyboard.up('Shift');
         sprint = danger;
       }
+      const ahead = (s.chefX - s.x) * dir;
+      if (s.chef === 'chase' && s.y === 530 && ahead > 0 && ahead < 145) {
+        await g.tap('Space');
+      }
       await g.page.waitForTimeout(40);
       s = await g.read();
     }
@@ -67,14 +71,20 @@ async function climb(s) {
   }
   await log('climbed ' + s.kind);
 }
-async function watchFromCover(x,name) {
+async function watchFromCover(x, name) {
   await cross(x);
   await g.tap('e');
-  assert.equal((await g.read()).hidden,name);
+  assert.equal((await g.read()).hidden, name);
   // If he saw us duck in, leave through the far side as he starts searching.
-  await g.wait(s=>(s.chef==='search' && Math.abs(s.chefX-x)<75) ||
-    (s.chef==='patrol' && (s.chefX<x-90 || (s.facing===1 && s.chefX>x+185))), 'wait for the patrol to pass '+name,65000);
-  await log('waited in '+name);
+  await g.wait(
+    (s) =>
+      (s.chef === 'search' && Math.abs(s.chefX - x) < 75) ||
+      (s.chef === 'patrol' &&
+        (s.chefX < x - 90 || (s.facing === 1 && s.chefX > x + 185))),
+    'wait for the patrol to pass ' + name,
+    65000
+  );
+  await log('waited in ' + name);
   await g.tap('e');
 }
 try {
@@ -112,8 +122,8 @@ try {
     assert.equal(carried.delivered.length, index);
     await log('carrying ' + s.kind);
     if (!index) await g.shot('desktop-carry');
-    if(index===2) await watchFromCover(1040,'Flour sack');
-    if(index>0) await watchFromCover(1830,'Teapot');
+    if (index === 2) await watchFromCover(1040, 'Flour sack');
+    if (index > 0) await watchFromCover(1830, 'Teapot');
     await cross(3090, index > 0);
     await g.tap('e');
     const delivered = await g.wait(

@@ -17,7 +17,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
-      - run: npx playwright install --with-deps chromium
+      - run: npx playwright install --with-deps chromium webkit
       - name: Start the local preview
         run: |
           npm run preview -- --port 4318 --strictPort > /tmp/rat-preview.log 2>&1 &
@@ -26,6 +26,8 @@ jobs:
           exit 1
       - name: Play the kitchen with keyboard and touch
         run: npm run test:game
+      - name: Check touch jumping and rotation in WebKit
+        run: node tests/v3-webkit.mjs
       - run: npm run build:offline
       - run: node tests/v3-offline.mjs
       - uses: actions/upload-artifact@v4

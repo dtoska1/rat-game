@@ -5,9 +5,23 @@ export const HOME = 3100;
 export const SPOON = 2060;
 export const POT = 1830;
 export const containers = [
-  {name:'Teapot', frame:'pot', x:POT, width:160, height:115, radius:56},
-  {name:'Flour sack', frame:'sack', x:1040, width:115, height:107, radius:49},
-  {name:'Pastry crate', frame:'crate', x:2874, width:126, height:96, radius:51},
+  { name: 'Teapot', frame: 'pot', x: POT, width: 160, height: 115, radius: 56 },
+  {
+    name: 'Flour sack',
+    frame: 'sack',
+    x: 1040,
+    width: 115,
+    height: 107,
+    radius: 49,
+  },
+  {
+    name: 'Pastry crate',
+    frame: 'crate',
+    x: 2874,
+    width: 126,
+    height: 96,
+    radius: 51,
+  },
 ];
 export type Pastry = 'eclair' | 'macaron' | 'cake';
 export type Station = {
@@ -58,10 +72,17 @@ export interface Slab {
   right: number;
   top: number;
   thick: number;
+  oneWay?: boolean;
 }
 export const slabs: Slab[] = stations.flatMap((s) => [
   { left: s.x - s.width / 2, right: s.x + s.width / 2, top: s.top, thick: 20 },
-  { left: stool(s) - 71, right: stool(s) + 71, top: STOOL_Y, thick: 10 },
+  {
+    left: stool(s) - 71,
+    right: stool(s) + 71,
+    top: STOOL_Y,
+    thick: 10,
+    oneWay: true,
+  },
 ]);
 export const hideouts = [
   { name: 'Home', x: HOME, radius: 68 },
@@ -100,6 +121,8 @@ export function blocksSight(x1: number, y1: number, x2: number, y2: number) {
   }
   return (
     slabs.some((s) => hits(s.left, s.right, s.top, s.top + s.thick)) ||
-    containers.some(p=>hits(p.x-p.radius+9,p.x+p.radius-9,FLOOR-p.height+16,FLOOR))
+    containers.some((p) =>
+      hits(p.x - p.radius + 9, p.x + p.radius - 9, FLOOR - p.height + 16, FLOOR)
+    )
   );
 }

@@ -55,7 +55,7 @@ export class Pantry {
     }
     const cover = coverAt(r.x, r.y);
     if (cover) return { action: 'hide', label: 'Hide · ' + cover.name };
-    if (Math.abs(r.x - SPOON) < 58 && r.y >= FLOOR - 12 && this.clang <= 0)
+    if (Math.abs(r.x - SPOON) < 58 && r.y >= FLOOR - 100 && this.clang <= 0)
       return { action: 'clang', label: 'Knock the spoon' };
     return { action: 'none', label: '' };
   }

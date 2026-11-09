@@ -15,6 +15,32 @@ try {
   assert.deepEqual((await g.read()).delivered, []);
   checks.push('No spawn win or right + action shortcut');
   await g.reset();
+  await g.page.keyboard.down('ArrowLeft');
+  await g.wait((s) => s.vx < -150, 'moving left');
+  await g.page.keyboard.down('ArrowRight');
+  await g.wait(
+    (s) => s.vx > 0,
+    'reverse before releasing the old direction',
+    1000
+  );
+  await g.page.keyboard.up('ArrowRight');
+  await g.wait((s) => s.vx < 0, 'resume the remaining held direction', 1000);
+  await g.page.keyboard.up('ArrowLeft');
+  checks.push(
+    'Pressing the opposite direction reverses immediately while both keys overlap'
+  );
+  for (const key of ['Space', 'ArrowUp', 'w']) {
+    await g.reset();
+    await g.go(2641);
+    assert.equal((await g.read()).y, 530);
+    await g.page.keyboard.press(key, { delay: 20 });
+    await g.wait((s) => s.y < 448, 'short ' + key + ' press clears the stool');
+    await g.wait((s) => s.y === 448 && s.vy === 0, 'land on the stool');
+    checks.push(
+      'A short ' + key + ' press from directly underneath lands on the stool'
+    );
+  }
+  await g.reset();
   await g.go(2326);
   const under = await g.read();
   assert.equal(under.y, 530);
@@ -57,13 +83,33 @@ try {
   );
   await g.reset();
   await g.go(2410);
-  await g.wait(s=>s.chef==='chase' && s.seen && Math.abs(s.chefX-s.x)<195,'chef sees the rat enter the tablecloth',30000);
+  const spotted = await g.wait((s) => s.seen, 'chef gets clear sight', 30000);
+  const pursuing = await g.wait(
+    (s) => s.chef === 'chase' && s.seen,
+    'chef pursues on sight'
+  );
+  const reaction = Math.round((pursuing.t - spotted.t) * 1000);
+  assert.ok(
+    reaction <= 250,
+    'sustained clear sight starts a chase within 250 ms'
+  );
+  checks.push('First clear sight to pursuit: ' + reaction + ' ms of play time');
+  await g.wait(
+    (s) => s.chef === 'chase' && s.seen && Math.abs(s.chefX - s.x) < 195,
+    'chef sees the rat enter the tablecloth',
+    30000
+  );
   await g.tap('e');
-  assert.equal((await g.read()).hidden,'Tablecloth');
-  await g.wait(s=>s.chef==='search' && s.hidden==='Tablecloth','search last seen cover');
+  assert.equal((await g.read()).hidden, 'Tablecloth');
+  await g.wait(
+    (s) => s.chef === 'search' && s.hidden === 'Tablecloth',
+    'search last seen cover'
+  );
   await g.shot('desktop-search');
   await g.page.locator('#stage[data-mode="lost"]').waitFor();
-  checks.push('Chef investigates the exact hiding spot he saw the rat enter and catches it there');
+  checks.push(
+    'Chef investigates the exact hiding spot he saw the rat enter and catches it there'
+  );
   for (let attempt = 1; attempt <= 3; attempt++) {
     await g.reset();
     // Meet the chef face to face on the floor, then keep a direction held across replay.

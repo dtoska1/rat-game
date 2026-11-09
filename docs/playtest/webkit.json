@@ -1,0 +1,6 @@
+{
+  "browser": "Playwright WebKit",
+  "portraitTouchJump": true,
+  "landscapeTouchLanding": true,
+  "browserErrors": []
+}
