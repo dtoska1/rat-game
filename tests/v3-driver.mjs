@@ -12,14 +12,16 @@ export async function openGame(view = 'desktop', engine = chromium) {
   const size =
     view === 'portrait'
       ? [390, 844]
-      : view === 'landscape'
-        ? [844, 390]
-        : [1360, 830];
+      : view === 'promax'
+        ? [956, 440]
+        : view === 'landscape'
+          ? [844, 390]
+          : [1360, 830];
   const context = await browser.newContext({
     viewport: { width: size[0], height: size[1] },
     hasTouch: view !== 'desktop',
     isMobile: view !== 'desktop',
-    deviceScaleFactor: 1,
+    deviceScaleFactor: view === 'promax' ? 3 : 1,
   });
   const page = await context.newPage(),
     errors = [];

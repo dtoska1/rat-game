@@ -2,5 +2,7 @@
   "browser": "Playwright WebKit",
   "portraitTouchJump": true,
   "landscapeTouchLanding": true,
+  "singleTapAscent": true,
+  "reducedViewportFits": true,
   "browserErrors": []
 }

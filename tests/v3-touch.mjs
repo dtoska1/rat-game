@@ -59,9 +59,16 @@ async function walk(x, boost = false) {
 try {
   await g.shot(view + '-title');
   await g.start();
+  if (view === 'promax') {
+    await session.send('Emulation.setSafeAreaInsetsOverride', {
+      insets: { left: 60, right: 60, bottom: 21 }
+    });
+  }
   const sizes = await g.page.evaluate(() => {
     const stage = document.querySelector('#stage').getBoundingClientRect(),
       thumbs = document.querySelector('#thumbs').getBoundingClientRect();
+    const canvas = document.querySelector('#world canvas');
+    const display = canvas.getBoundingClientRect();
     return {
       stageBottom: stage.bottom,
       controlsTop: thumbs.top,
@@ -69,6 +76,12 @@ try {
       viewport: innerHeight,
       width: document.documentElement.scrollWidth,
       viewportWidth: innerWidth,
+      canvas: [canvas.width, canvas.height],
+      display: [display.width, display.height],
+      dedicatedClimb: !!document.querySelector('[data-control="climb"]'),
+      leftButton: document.querySelector('[data-control="left"]').getBoundingClientRect().left,
+      jumpRight: document.querySelector('[data-control="jump"]').getBoundingClientRect().right,
+      jumpBottom: document.querySelector('[data-control="jump"]').getBoundingClientRect().bottom
     };
   });
   assert.ok(
@@ -77,6 +90,22 @@ try {
     'whole touch deck fits below game'
   );
   assert.ok(sizes.width <= sizes.viewportWidth, 'no horizontal scrolling');
+  assert.equal(sizes.dedicatedClimb, false);
+  assert.ok(
+    Math.abs(
+      sizes.canvas[0] / sizes.canvas[1] - sizes.display[0] / sizes.display[1]
+    ) < 0.015,
+    'uniform canvas scale'
+  );
+  if (view === 'promax') {
+    assert.equal(sizes.viewportWidth, 956);
+    assert.equal(sizes.viewport, 440);
+    assert.ok(sizes.leftButton >= 60 && sizes.jumpRight <= 896 && sizes.jumpBottom <= 419, 'buttons clear simulated landscape safe areas');
+    assert.ok(
+      sizes.stageBottom >= 350 && sizes.canvas[0] / sizes.display[0] >= 2.9,
+      'large Retina landscape playfield'
+    );
+  }
   await walk(2641);
   await hold('jump');
   await stop();
@@ -104,10 +133,13 @@ try {
   await stop();
   await g.wait((s) => s.y === 448 && s.vy === 0, 'touch landing');
   await walk(2585);
-  await hold('climb');
-  await g.wait((s) => s.y === 371, 'touch climb');
+  await hold('jump');
   await stop();
-  await record('manual climb');
+  await g.wait(
+    (s) => s.y === 371 && !s.held.includes('jump'),
+    'one released Jump tap completes ladder climb'
+  );
+  await record('single Jump tap climbs after release');
   await g.shot(view + '-table');
   await walk(2458);
   for (let n = 0; n < 10 && (await g.read()).energy < 100; n++) {

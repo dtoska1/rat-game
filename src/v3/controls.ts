@@ -3,7 +3,7 @@ export type Control =
   | 'right'
   | 'jump'
   | 'up'
-  | 'climb'
+  | 'space'
   | 'act'
   | 'boost';
 const mapping: Record<string, Control> = {
@@ -13,7 +13,7 @@ const mapping: Record<string, Control> = {
   KeyD: 'right',
   ArrowUp: 'up',
   KeyW: 'up',
-  Space: 'jump',
+  Space: 'space',
   KeyE: 'act',
   ShiftLeft: 'boost',
   ShiftRight: 'boost',

@@ -5,15 +5,24 @@
     "controlsBottom": 609.515625,
     "viewport": 844,
     "width": 390,
-    "viewportWidth": 390
+    "viewportWidth": 390,
+    "canvas": [
+      368,
+      484
+    ],
+    "display": [
+      368.390625,
+      483.515625
+    ],
+    "dedicatedClimb": false
   },
   "renderer": "Canvas",
   "events": [
     {
       "name": "quick Jump tap from directly below",
       "mode": "play",
-      "t": 2.99,
-      "x": 2629,
+      "t": 2.97,
+      "x": 2625,
       "y": 448,
       "vx": 0,
       "vy": 0,
@@ -34,8 +43,8 @@
     {
       "name": "boost drains energy",
       "mode": "play",
-      "t": 1.17,
-      "x": 2756,
+      "t": 1.19,
+      "x": 2753,
       "y": 530,
       "vx": 0,
       "vy": 0,
@@ -46,7 +55,7 @@
       "delivered": [],
       "action": "none",
       "chef": "patrol",
-      "chefX": 981,
+      "chefX": 979,
       "facing": -1,
       "seen": false,
       "alert": 0,
@@ -54,9 +63,9 @@
       "last": ""
     },
     {
-      "name": "manual climb",
+      "name": "single Jump tap climbs after release",
       "mode": "play",
-      "t": 2.86,
+      "t": 2.84,
       "x": 2575,
       "y": 371,
       "vx": 0,
@@ -78,8 +87,8 @@
     {
       "name": "carrying untouched éclair",
       "mode": "play",
-      "t": 7.71,
-      "x": 2313,
+      "t": 7.76,
+      "x": 2309,
       "y": 371,
       "vx": 0,
       "vy": 0,
@@ -90,7 +99,7 @@
       "delivered": [],
       "action": "none",
       "chef": "patrol",
-      "chefX": 1297,
+      "chefX": 1302,
       "facing": 1,
       "seen": false,
       "alert": 0,
@@ -100,8 +109,8 @@
     {
       "name": "separate home delivery",
       "mode": "play",
-      "t": 12.67,
-      "x": 3098,
+      "t": 12.79,
+      "x": 3100,
       "y": 530,
       "vx": 0,
       "vy": 0,
@@ -114,7 +123,7 @@
       ],
       "action": "emerge",
       "chef": "patrol",
-      "chefX": 1734,
+      "chefX": 1745,
       "facing": 1,
       "seen": false,
       "alert": 0,
@@ -124,7 +133,7 @@
     {
       "name": "replay releases old touch",
       "mode": "play",
-      "t": 0.33,
+      "t": 0.3,
       "x": 3100,
       "y": 530,
       "vx": 0,
@@ -145,18 +154,18 @@
     }
   ],
   "timing": {
-    "movingFrames": 503,
+    "movingFrames": 505,
     "intervalMs": {
       "median": 16.7,
       "p95": 16.7
     },
     "gameStepMs": {
       "median": 0.5,
-      "p95": 0.8
+      "p95": 1
     },
     "rendererSubmitMs": {
       "median": 0.3,
-      "p95": 0.5
+      "p95": 0.7
     }
   },
   "browserErrors": []

@@ -2,9 +2,8 @@ import {
   FLOOR,
   HOME,
   WORLD,
-  STOOL_Y,
   slabs,
-  stations,
+  ladderAt,
   rack,
   type Station,
 } from './level';
@@ -27,22 +26,24 @@ export class Rat {
   phase = 0;
   pose = 'hide';
   private jumpedOffLadder = false;
+  private touchAscent = false;
   update(dt: number, keys: Controls) {
     this.eating = Math.max(0, this.eating - dt);
     const direction = keys.direction();
-    const climbHeld = keys.down('up') || keys.down('climb');
+    const nearby = ladderAt(this.x, this.y);
+    const touchPress = keys.take('jump');
+    const spacePress = keys.take('space');
+    const startAscent = touchPress && !!nearby && !this.climbed;
+    if (startAscent) {
+      this.touchAscent = true;
+      this.buffer = 0;
+    } else if (!nearby || spacePress || touchPress) this.touchAscent = false;
+    const climbHeld = keys.down('up') || this.touchAscent;
     if (!climbHeld || this.grounded) this.jumpedOffLadder = false;
-    const ladder =
-      climbHeld &&
-      !this.jumpedOffLadder &&
-      stations.find(
-        (s) =>
-          Math.abs(this.x - rack(s)) < 38 &&
-          this.y > s.top + 0.1 &&
-          this.y <= STOOL_Y + 14
-      );
+    const ladder = climbHeld && !this.jumpedOffLadder && nearby;
     const upPressed = keys.take('up');
-    const jumpPressed = keys.take('jump') || (upPressed && !ladder);
+    const jumpPressed =
+      spacePress || (touchPress && !startAscent) || (upPressed && !ladder);
     this.buffer = jumpPressed ? 0.15 : Math.max(0, this.buffer - dt);
     this.coyote = this.grounded ? 0.1 : Math.max(0, this.coyote - dt);
     this.boosting = false;
@@ -84,7 +85,7 @@ export class Rat {
         this.buffer = 0;
       }
       // Even a one-frame tap clears the first stool. Holding extends the arc.
-      if (!keys.down('jump') && !keys.down('up'))
+      if (!keys.down('jump') && !keys.down('space') && !keys.down('up'))
         this.vy = Math.max(this.vy, -545);
       this.vy = Math.min(870, this.vy + 1480 * dt);
       let nextX = Math.max(24, Math.min(WORLD - 24, this.x + this.vx * dt));

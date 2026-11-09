@@ -11,6 +11,7 @@ import {
   STOOL_Y,
   WORLD,
   pastryX,
+  ladderAt,
   rack,
   sampleX,
   stations,
@@ -28,6 +29,7 @@ export class GameScene extends Phaser.Scene {
   chef = new Chef();
   pantry = new Pantry();
   mode: Mode = 'title';
+  visibleHeight = HEIGHT;
   private ratArt!: Phaser.GameObjects.Image;
   private chefArt!: Phaser.GameObjects.Image;
   private cargo!: Phaser.GameObjects.Image;
@@ -94,7 +96,6 @@ export class GameScene extends Phaser.Scene {
       .image(0, 0, 'wall')
       .setOrigin(0)
       .setDisplaySize(HEIGHT * 3, HEIGHT)
-      .setScrollFactor(0)
       .setDepth(-2);
     for (const s of stations) {
       const tableFrame = {
@@ -261,8 +262,15 @@ export class GameScene extends Phaser.Scene {
   private syncView(snap: boolean, dt = 0) {
     if (!this.wall) return;
     const r = this.rat,
-      c = this.chef,
-      w = this.scale.width;
+      c = this.chef;
+    const camera = this.cameras.main;
+    const zoom = Math.max(
+      this.scale.height / this.visibleHeight,
+      this.scale.width / WORLD
+    );
+    if (camera.zoom !== zoom) camera.setZoom(zoom);
+    const w = this.scale.width / zoom,
+      h = this.scale.height / zoom;
     const half = w * 0.5;
     const clamped = (x: number) => Math.max(half, Math.min(WORLD - half, x));
     const look = r.x + r.facing * Math.min(105, w * 0.12);
@@ -273,9 +281,17 @@ export class GameScene extends Phaser.Scene {
       this.camX = clamped(
         this.camX + (gap - Math.sign(gap) * zone) * (1 - Math.exp(-7 * dt))
       );
-    this.cameras.main.scrollX = Math.round(this.camX - half);
-    this.wall.x =
-      (-this.cameras.main.scrollX / (WORLD - w)) * Math.max(0, HEIGHT * 3 - w);
+    const left = this.camX - half;
+    const top = Math.max(0, Math.min(FLOOR + 48 - h, r.y - 0.34 * h));
+    camera.scrollX = this.camX - this.scale.width * 0.5;
+    const scrollY = top + (h - this.scale.height) * 0.5;
+    camera.scrollY = snap
+      ? scrollY
+      : camera.scrollY + (scrollY - camera.scrollY) * (1 - Math.exp(-12 * dt));
+    const wallWidth = Math.max(HEIGHT * 3, w);
+    if (this.wall.displayWidth !== wallWidth)
+      this.wall.setDisplaySize(wallWidth, wallWidth / 3);
+    this.wall.x = left - (left * (wallWidth - w)) / Math.max(1, WORLD - w);
     this.moving = Math.abs(r.vx) > 30 || r.climbed;
     const bob = Math.sin(r.phase);
     const frame = r.hidden
@@ -298,9 +314,9 @@ export class GameScene extends Phaser.Scene {
       .setFrame(frame)
       .setFlipX(r.facing < 0)
       .setAlpha(r.hidden ? 0.75 : 1)
-      .setDisplaySize(
-        (68 + (r.pose === 'sprint' ? 5 : 0)) * small,
-        (58 + (this.moving ? bob * 2 : Math.sin(r.phase) * 1.5)) * small
+      .setScale(
+        ((58 + (this.moving ? bob * 2 : Math.sin(r.phase) * 1.5)) * small) /
+          this.ratArt.frame.realHeight
       )
       .setPosition(
         r.x,
@@ -331,7 +347,7 @@ export class GameScene extends Phaser.Scene {
                 ? 'chef-walk'
                 : 'chef-search'
       )
-      .setDisplaySize(c.mode === 'chase' ? 214 : 174, 217)
+      .setScale(217 / this.chefArt.frame.realHeight)
       .setFlipX(c.facing < 0)
       .setPosition(c.x, FLOOR - Math.abs(Math.sin(c.phase)) * 3)
       .setAngle(Math.sin(c.phase) * 2);
@@ -364,13 +380,17 @@ export class GameScene extends Phaser.Scene {
         .setFrame(r.carried.kind)
         .setDisplaySize(57, r.carried.kind === 'cake' ? 50 : 31)
         .setPosition(r.x + r.facing * 31, r.y - 9 - Math.abs(bob) * 2);
-    const nearLadder = stations.find(
-      (s) =>
-        Math.abs(r.x - rack(s)) < 40 && r.y <= STOOL_Y + 14 && r.y > s.top + 1
-    );
+    const nearLadder = ladderAt(r.x, r.y);
     const context = this.pantry.choose(r);
     const msg =
-      context.label || (nearLadder ? '↑ Climb' : r.hidden ? 'Hidden' : '');
+      context.label ||
+      (nearLadder
+        ? this.coarse.matches
+          ? 'Tap Jump to climb'
+          : '↑ Climb'
+        : r.hidden
+          ? 'Hidden'
+          : '');
     const display =
       msg && this.mode === 'play'
         ? (context.action === 'none'
@@ -386,8 +406,8 @@ export class GameScene extends Phaser.Scene {
       .setVisible(!!label)
       .setPosition(
         Math.max(
-          this.cameras.main.scrollX + this.hint.width / 2 + 4,
-          Math.min(this.cameras.main.scrollX + w - this.hint.width / 2 - 4, r.x)
+          left + this.hint.width / 2 + 4,
+          Math.min(left + w - this.hint.width / 2 - 4, r.x)
         ),
         r.y - (r.hidden ? 46 : 76)
       );

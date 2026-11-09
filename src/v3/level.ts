@@ -67,6 +67,11 @@ export const stool = (s: Station) => rack(s) + 66;
 export const sampleX = (s: Station) => s.x + 48;
 export const pastryX = (s: Station) => s.x - 84;
 export const STOOL_Y = FLOOR - 82;
+export function ladderAt(x: number, y: number) {
+  return stations.find(
+    (s) => Math.abs(x - rack(s)) < 38 && y > s.top + 0.1 && y <= STOOL_Y + 14
+  );
+}
 export interface Slab {
   left: number;
   right: number;

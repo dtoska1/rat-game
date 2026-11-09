@@ -15,7 +15,7 @@ npm run dev
 
 ## The kitchen
 
-Move left from home. Tap Jump to land on the **mint stool**, even from directly underneath. Walk to the ladder and hold Climb. Use Action beside a small tasting portion to refill your energy. The three samples restore 24, 17 and 37 points respectively. At 100%, take the whole pastry on the other plate. Carry it back to the hole and use Action to stash it. Heavier pastries slow you down.
+Move left from home. Tap Jump to land on the **mint stool**, even from directly underneath. Walk to the ladder and tap Jump again to climb to the tabletop. Use Action beside a small tasting portion to refill your energy. The three samples restore 24, 17 and 37 points respectively. At 100%, take the whole pastry on the other plate. Carry it back to the hole and use Action to stash it. Heavier pastries slow you down.
 
 The chef follows a patrol and needs a clear view to spot you. Hide under a table, inside the blue teapot or in the hole. If he watches you disappear, he can investigate that spot. Knocking the spoon brings him to its location. Boost briefly to cross a dangerous sightline, then eat to refill.
 
@@ -23,7 +23,7 @@ The chef follows a patrol and needs a clear view to spot you. Hide under a table
 | --- | --- | --- |
 | Walk | A / D or left / right arrows | Left / right |
 | Jump | Space, W or ↑. Hold for a higher jump. | Tap Jump, or hold for more height |
-| Climb at a ladder | Hold W or up arrow | Hold Climb |
+| Climb at a ladder | Hold W or up arrow | Tap Jump once |
 | Taste, take, stash, hide or emerge | E | Contextual Action |
 | Boost | Hold Shift while moving | Hold Boost while moving |
 | Pause | Esc | Pause button |

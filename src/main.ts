@@ -43,6 +43,7 @@ function refresh() {
   const { mode, rat, chef, pantry } = scene;
   if (previous !== mode) {
     stage.dataset.mode = mode;
+    document.documentElement.dataset.gameMode = mode;
     poster.hidden = mode !== 'title';
     hud.hidden = mode !== 'play' && mode !== 'caught';
     thumbs.hidden = !hasTouchControls() || mode !== 'play';
@@ -107,7 +108,7 @@ function refresh() {
                 : rat.y > 450 &&
                     stations.some((s) => Math.abs(rat.x - s.x) < 300)
                   ? hasTouchControls()
-                    ? 'Tap Jump onto the stool · hold Climb at the ladder'
+                    ? 'Jump onto the stool · tap Jump again at the ladder'
                     : 'Space / ↑ to jump onto the stool · hold ↑ at the ladder'
                   : '';
     write(notice, message);
@@ -146,12 +147,28 @@ function refresh() {
     );
   } else debug.hidden = true;
 }
-function logicalWidth() {
-  return Math.min(
-    1720,
-    Math.max(355, Math.round((stage.clientWidth / stage.clientHeight) * HEIGHT))
+function measureView() {
+  const width = Math.max(1, stage.clientWidth),
+    height = Math.max(1, stage.clientHeight);
+  const density = Math.min(
+    window.devicePixelRatio || 1,
+    3,
+    Math.sqrt(3200000 / (width * height))
   );
+  const landscapePhone =
+    hasTouchControls() &&
+    matchMedia('(orientation: landscape) and (max-height: 600px)').matches;
+  return {
+    width: Math.round(width * density),
+    height: Math.round(height * density),
+    visibleHeight: landscapePhone
+      ? Phaser.Math.Clamp(height / 1.05, 254, 375)
+      : HEIGHT,
+  };
 }
+document.documentElement.classList.toggle('touch-game', hasTouchControls());
+const initialView = measureView();
+scene.visibleHeight = initialView.visibleHeight;
 const renderer =
   new URLSearchParams(location.search).get('renderer') === 'webgl'
     ? Phaser.AUTO
@@ -159,8 +176,8 @@ const renderer =
 const game = new Phaser.Game({
   type: renderer,
   parent: 'world',
-  width: logicalWidth(),
-  height: HEIGHT,
+  width: initialView.width,
+  height: initialView.height,
   backgroundColor: '#f1cc9b',
   scene: [scene],
   scale: { mode: Phaser.Scale.NONE },
@@ -171,13 +188,19 @@ const game = new Phaser.Game({
 });
 const fit = () => {
   if (!game.scale.canvas) return;
-  const w = logicalWidth();
-  if (w !== game.scale.width) game.scale.resize(w, HEIGHT);
+  const view = measureView();
+  scene.visibleHeight = view.visibleHeight;
+  if (view.width !== game.scale.width || view.height !== game.scale.height) {
+    game.scale.resize(view.width, view.height);
+  }
 };
 new ResizeObserver(fit).observe(stage);
+window.addEventListener('resize', fit);
 game.events.once(Phaser.Core.Events.READY, fit);
 touch.addEventListener('change', () => {
+  document.documentElement.classList.toggle('touch-game', hasTouchControls());
   thumbs.hidden = !hasTouchControls() || scene.mode !== 'play';
+  fit();
 });
 start.onclick = () => scene.start();
 el('pause').onclick = () => scene.pause();
