@@ -166,6 +166,23 @@ function measureView() {
       : HEIGHT,
   };
 }
+// iOS Safari can still pinch-zoom even when the viewport disables scaling.
+// Ignore browser zoom gestures during play without interfering with game taps.
+const preventPlayZoom = (event: Event) => {
+  if (hasTouchControls() && scene.mode === 'play' && event.cancelable) {
+    event.preventDefault();
+  }
+};
+document.addEventListener('gesturestart', preventPlayZoom, { passive: false });
+document.addEventListener('gesturechange', preventPlayZoom, { passive: false });
+document.addEventListener(
+  'touchmove',
+  (event) => {
+    if (event.touches.length > 1) preventPlayZoom(event);
+  },
+  { passive: false }
+);
+document.addEventListener('dblclick', preventPlayZoom);
 document.documentElement.classList.toggle('touch-game', hasTouchControls());
 const initialView = measureView();
 scene.visibleHeight = initialView.visibleHeight;
