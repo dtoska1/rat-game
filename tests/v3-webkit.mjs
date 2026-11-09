@@ -6,6 +6,22 @@ import { openGame, out } from './v3-driver.mjs';
 const g = await openGame('portrait', webkit);
 try {
   await g.page.locator('#start').tap();
+  const zoomGuard = await g.page.evaluate(() => {
+    const viewport = document.querySelector('meta[name="viewport"]')?.content || '';
+    const gesture = new Event('gesturestart', { bubbles: true, cancelable: true });
+    document.dispatchEvent(gesture);
+    return {
+      viewport,
+      stageTouchAction: getComputedStyle(document.querySelector('#stage')).touchAction,
+      jumpTouchAction: getComputedStyle(document.querySelector('[data-control="jump"]')).touchAction,
+      gesturePrevented: gesture.defaultPrevented,
+    };
+  });
+  assert.match(zoomGuard.viewport, /maximum-scale=1/);
+  assert.match(zoomGuard.viewport, /user-scalable=no/);
+  assert.equal(zoomGuard.stageTouchAction, 'none');
+  assert.equal(zoomGuard.jumpTouchAction, 'none');
+  assert.equal(zoomGuard.gesturePrevented, true);
   const jump = g.page.locator('[data-control="jump"]');
   await jump.tap();
   await g.wait((s) => !s.hidden && s.y < 448, 'touch jump out of the hole');
