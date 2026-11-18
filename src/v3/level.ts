@@ -139,3 +139,12 @@ export const cheeseCaches = [
   { id: 'table', name: 'Tabletop cheese', x: 1415, y: 332 },
   { id: 'aisle', name: 'Forgotten cheese', x: 235, y: FLOOR },
 ] as const;
+
+// The bonus round asks the rat to sabotage the kitchen, not just collect food.
+// Every device changes enemy or hazard behavior for a short, useful window.
+export const gadgets = [
+  { id: 'breaker', name: 'Mop breaker', x: 2700, color: 0xb5d7b8, short: 'MOP' },
+  { id: 'flour', name: 'Flour cloud', x: 990, color: 0xf0c7d3, short: 'PUFF' },
+  { id: 'duck', name: 'Squeaky decoy', x: 785, color: 0xffdf8f, short: 'QUACK' },
+] as const;
+export const REQUIRED_GADGETS = 2;
