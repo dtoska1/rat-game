@@ -6,6 +6,7 @@ import atlasData from './art/kitchen-atlas.json';
 import {
   FLOOR,
   cheeseCaches,
+  gadgets,
   HEIGHT,
   HOME,
   containers,
@@ -20,6 +21,7 @@ import {
   stool,
 } from './level';
 import { Chef } from './chef';
+import { MopBot } from './chaos';
 import { Rat } from './rat';
 import { Pantry } from './interactions';
 import { Controls } from './controls';
@@ -30,6 +32,7 @@ export class GameScene extends Phaser.Scene {
   rat = new Rat();
   chef = new Chef();
   pantry = new Pantry();
+  mop = new MopBot();
   mode: Mode = 'title';
   visibleHeight = HEIGHT;
   private ratArt!: Phaser.GameObjects.Image;
@@ -41,6 +44,8 @@ export class GameScene extends Phaser.Scene {
   private spoon!: Phaser.GameObjects.Image;
   private foods: Phaser.GameObjects.Image[] = [];
   private cheeseArt: Phaser.GameObjects.Image[] = [];
+  private mopArt!: Phaser.GameObjects.Container;
+  private gadgetArt: Phaser.GameObjects.Container[] = [];
   private plates: Phaser.GameObjects.Ellipse[] = [];
   private containerArt: Phaser.GameObjects.Image[] = [];
   private baked!: Phaser.GameObjects.Image;
@@ -147,6 +152,30 @@ export class GameScene extends Phaser.Scene {
         .setDepth(6)
         .setVisible(false)
     );
+    // Hand-drawn-style, lightweight vector props: animated mop bot and
+    // three interactive prank stations, separate from the classic wall art.
+    const robot = this.add.graphics();
+    robot.fillStyle(0x60474e).fillCircle(-26, -9, 13).fillCircle(26, -9, 13);
+    robot.fillStyle(0xa9d9ca).fillRoundedRect(-43, -42, 86, 33, 13);
+    robot.lineStyle(3, 0x60474e).strokeRoundedRect(-43, -42, 86, 33, 13);
+    robot.fillStyle(0xffffff).fillCircle(-13, -27, 7).fillCircle(12, -27, 7);
+    robot.fillStyle(0x493842).fillCircle(-12, -27, 3).fillCircle(13, -27, 3);
+    robot.lineStyle(3, 0x60474e).lineBetween(-7, -18, 6, -18);
+    this.mopArt = this.add.container(this.mop.x, FLOOR, [robot])
+      .setDepth(8).setVisible(false);
+    this.gadgetArt = gadgets.map((g) => {
+      const sketch = this.add.graphics();
+      sketch.fillStyle(0x62474c).fillRoundedRect(-37, -52, 74, 44, 7);
+      sketch.fillStyle(g.color).fillRoundedRect(-33, -49, 66, 36, 5);
+      sketch.lineStyle(2, 0x62474c).strokeRoundedRect(-33, -49, 66, 36, 5);
+      sketch.fillStyle(0xffffff).fillCircle(24, -44, 3);
+      const tag = this.add.text(0, -31, g.short, {
+        fontFamily: 'Arial, sans-serif', fontSize: '12px', fontStyle: 'bold',
+        color: '#4a3239', resolution: 2,
+      }).setOrigin(0.5);
+      return this.add.container(g.x, FLOOR, [sketch, tag])
+        .setDepth(7).setVisible(false);
+    });
     this.chefArt = this.art('chef-walk', this.chef.x, FLOOR, 160, 215, 5);
     this.ratArt = this.art('rat-idle', HOME, FLOOR, 68, 59, 7);
     this.cargo = this.art('eclair', 0, 0, 61, 34, 8).setVisible(false);
@@ -182,6 +211,7 @@ export class GameScene extends Phaser.Scene {
     this.rat = new Rat();
     this.chef = new Chef();
     this.pantry = new Pantry();
+    this.mop = new MopBot();
     this.accumulator = 0;
     this.runTime = 0;
     this.endTime = 0;
@@ -233,8 +263,9 @@ export class GameScene extends Phaser.Scene {
       return;
     }
     if (this.mode !== 'play') return;
-    this.accumulator += dt;
-    while (this.accumulator >= 1 / 120 && this.mode === 'play') {
+    this.accumulator = Math.min(this.accumulator + dt, 5 / 120);
+    let steps = 0;
+    while (this.accumulator >= 1 / 120 && this.mode === 'play' && steps++ < 5) {
       this.tick(1 / 120);
       this.accumulator -= 1 / 120;
     }
@@ -251,6 +282,7 @@ export class GameScene extends Phaser.Scene {
     this.runTime += dt;
     p.clang = Math.max(0, p.clang - dt);
     p.messageTime = Math.max(0, p.messageTime - dt);
+    p.mopDisabled = Math.max(0, p.mopDisabled - dt);
     const chefMode = this.chef.mode;
     const vy = r.vy,
       boost = r.boosting;
@@ -258,6 +290,11 @@ export class GameScene extends Phaser.Scene {
     if (vy >= 0 && r.vy < -280) this.sfx.play('jump');
     if (!boost && r.boosting) this.sfx.play('boost');
     if (this.controls.take('act')) p.use(r, this.chef, this.sfx);
+    if (this.mop.update(dt, r, p.phase === 'cheese', p.mopDisabled > 0)) {
+      this.chef.distract(this.mop.x);
+      p.tell('BONK! Jump over the mop bot or switch it off. −16 energy');
+      this.sfx.play('spoon');
+    }
     this.chef.heat = p.phase === 'cheese' ? 1 : 0;
     if (p.complete) {
       this.mode = 'won';
@@ -381,6 +418,16 @@ export class GameScene extends Phaser.Scene {
     this.spoon.setAngle(
       this.pantry.clang > 6 ? Math.sin(this.pantry.clang * 18) * 8 : 0
     );
+    this.mopArt
+      .setVisible(this.pantry.phase === 'cheese')
+      .setAlpha(this.pantry.mopDisabled > 0 ? 0.4 : 1)
+      .setPosition(this.mop.x, FLOOR - Math.sin(this.mop.phase) * 2);
+    this.gadgetArt.forEach((image, i) => {
+      const g = gadgets[i];
+      image.setVisible(
+        this.pantry.phase === 'cheese' && !this.pantry.gadgetsUsed.has(g.id)
+      );
+    });
     this.cheeseArt.forEach((image, i) => {
       const cache = cheeseCaches[i];
       image
@@ -453,6 +500,10 @@ export class GameScene extends Phaser.Scene {
       delivered: [...p.delivered],
       phase: p.phase,
       cheese: [...p.cheeseFound],
+      pranks: [...p.gadgetsUsed],
+      mopX: Math.round(this.mop.x),
+      mopDisabled: +p.mopDisabled.toFixed(1),
+      chefBlinded: +c.blinded.toFixed(1),
       complete: p.complete,
       action: p.choose(r).action,
       chef: c.mode,
