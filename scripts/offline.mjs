@@ -27,10 +27,26 @@ let standalone = String(html.source)
       js.code.replace(/<\/script/gi, '<\\/script') +
       '</script></body>'
   );
-for (const file of output.filter((o) => o.fileName.endsWith('.webp'))) {
+// V3.6 added two original SVG artworks. A standalone file cannot fetch
+// './assets/*.svg' from disk, so inline *all* emitted assets (SVG, PNG, WebP,
+// font files, etc.), not just WebP thumbnails.
+const mimes = {
+  '.webp': 'image/webp',
+  '.svg': 'image/svg+xml',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.woff2': 'font/woff2',
+  '.woff': 'font/woff',
+  '.ttf': 'font/ttf',
+};
+for (const file of output.filter((o) => o.type === 'asset' &&
+  o.fileName !== 'index.html' && !o.fileName.endsWith('.css'))) {
+  const extension = file.fileName.match(/\.[a-z0-9]+$/i)?.[0].toLowerCase();
+  const mime = mimes[extension] ?? 'application/octet-stream';
   standalone = standalone.replaceAll(
     './' + file.fileName,
-    'data:image/webp;base64,' + Buffer.from(file.source).toString('base64')
+    'data:' + mime + ';base64,' + Buffer.from(file.source).toString('base64')
   );
 }
 await mkdir('preview', { recursive: true });
