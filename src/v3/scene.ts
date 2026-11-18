@@ -123,13 +123,13 @@ export class GameScene extends Phaser.Scene {
       .setDisplaySize((HEIGHT * 1600) / 680, HEIGHT)
       .setDepth(-2);
     // Both actual scanned drawings are on the wall, not recreated in our art style.
-    // Drawing 2 has pride of place by the rat's home, visible on spawn.
+    // k🫶🏼 has pride of place by the rat's home, visible on spawn.
     const frames: {
       id: 'drawing2' | 'sketch'; texture: string; x: number;
       y: number; w: number; h: number; label: string; tint: number;
     }[] = [
       { id: 'drawing2', texture: 'original-drawing2',
-        x: 2825, y: 286, w: 171, h: 187, label: 'DRAWING 2 ★', tint: 0xc78e75 },
+        x: 2825, y: 286, w: 171, h: 187, label: 'k🫶🏼', tint: 0xc78e75 },
       { id: 'sketch', texture: 'original-kitchen-sketch',
         x: 1210, y: 198, w: 171, h: 120, label: 'KITCHEN IDEA', tint: 0x8da9a1 },
     ];
