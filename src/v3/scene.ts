@@ -34,6 +34,7 @@ export class GameScene extends Phaser.Scene {
   pantry = new Pantry();
   mop = new MopBot();
   mode: Mode = 'title';
+  playStyle: 'classic' | 'chaos' = 'classic';
   failureReason: 'chef' | 'alarm' = 'chef';
   visibleHeight = HEIGHT;
   private ratArt!: Phaser.GameObjects.Image;
@@ -208,11 +209,19 @@ export class GameScene extends Phaser.Scene {
     this.scale.on('resize', () => this.syncView(true));
     this.onChange();
   }
-  start() {
+  start(style: 'classic' | 'chaos' = 'classic') {
+    this.playStyle = style;
     this.rat = new Rat();
     this.chef = new Chef();
     this.pantry = new Pantry();
     this.mop = new MopBot();
+    if (style === 'chaos') {
+      // A separate quick-start route lets players interact with every new
+      // mechanic immediately while keeping the full three-pastry story intact.
+      this.pantry.delivered = new Set(stations.map((station) => station.kind));
+      this.pantry.phase = 'cheese';
+      this.rat.energy = 75;
+    }
     this.accumulator = 0;
     this.runTime = 0;
     this.endTime = 0;
@@ -222,7 +231,9 @@ export class GameScene extends Phaser.Scene {
     this.controls.enabled = true;
     this.mode = 'play';
     this.sfx.unlock();
-    this.pantry.tell('← Find the pink pastry table');
+    this.pantry.tell(style === 'chaos'
+      ? 'CHAOS MODE! Find cheese, prank the chef and dodge the mop! ←'
+      : '← Find the pink pastry table');
     this.syncView(true);
     this.onChange();
   }
@@ -517,6 +528,7 @@ export class GameScene extends Phaser.Scene {
       carried: r.carried?.kind ?? null,
       delivered: [...p.delivered],
       phase: p.phase,
+      playStyle: this.playStyle,
       cheese: [...p.cheeseFound],
       pranks: [...p.gadgetsUsed],
       notebook: p.notebook.tasks.map((task) => ({ id: task.id, done: p.notebook.done.has(task.id) })),

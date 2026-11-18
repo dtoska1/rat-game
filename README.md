@@ -13,6 +13,10 @@ npm ci
 npm run dev
 ```
 
+## V3.4 — launch Chaos instantly
+
+The main title screen now has two conspicuous options: **⚡ Play NEW Chaos** starts directly with the roaming mop, sabotage switches, secret cheeses, Squeak ability, three randomized optional prank tasks and the timed finale. **Original story** keeps the original three pastry deliveries, after which the same bonus stage unlocks. A visible `V3.4 · NEW MODE` marker in the header and in-game ribbon make it obvious whether the new release loaded. Restarting the selected heist preserves its mode. The original V1/V2 illustrated kitchen background is unchanged.
+
 ## The classic kitchen and the bonus mission
 
 V3 now uses the **original V1/V2 illustrated room** (`src/assets/room.png`) for its kitchen background and title screen. The foreground V3 sprites, collisions, fixed-step movement, chef and mobile controls remain intact. The classic full-room illustration is a proportion-preserving parallax backdrop; foreground furnishings still define collisions.

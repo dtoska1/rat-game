@@ -16,7 +16,8 @@ const stage = el('stage'),
   poster = el('poster'),
   hud = el('hud'),
   thumbs = el('thumbs'),
-  start = el<HTMLButtonElement>('start');
+  start = el<HTMLButtonElement>('start'),
+  chaosStart = el<HTMLButtonElement>('start-chaos');
 const dialog = el<HTMLDialogElement>('guide'),
   sound = new Sound(),
   controls = new Controls();
@@ -54,6 +55,7 @@ function refresh() {
   const { mode, rat, chef, pantry } = scene;
   if (previous !== mode) {
     stage.dataset.mode = mode;
+    stage.dataset.playStyle = scene.playStyle;
     document.documentElement.dataset.gameMode = mode;
     poster.hidden = mode !== 'title';
     hud.hidden = mode !== 'play' && mode !== 'caught';
@@ -61,7 +63,8 @@ function refresh() {
     el('outcome').hidden = !['lost', 'won', 'pause'].includes(mode);
     if (mode === 'title') {
       start.disabled = false;
-      write(start, 'Start heist   →');
+      chaosStart.disabled = false;
+      write(start, 'Original story →');
     }
     if (mode === 'pause' || mode === 'lost' || mode === 'won') {
       const lost = mode === 'lost',
@@ -89,7 +92,9 @@ function refresh() {
             ? 'The kitchen alarm rang before you escaped. Find the exit faster next time!'
             : 'The chef has baked you into his signature cake. At least the ears are flattering.'
           : won
-            ? 'Three pastries, three cheeses and two kitchen pranks! Check your score and try for GOLD.'
+            ? scene.playStyle === 'chaos'
+              ? 'You conquered the instant Chaos Challenge! Try the original story or chase a GOLD medal.'
+              : 'Three pastries, three cheeses and two kitchen pranks! Check your score and try for GOLD.'
             : 'Your rat will wait right here.'
       );
       write(
@@ -110,6 +115,9 @@ function refresh() {
     previous = mode;
   }
   if (mode === 'play') {
+    write(el('mode-ribbon'), scene.playStyle === 'chaos'
+      ? '⚡ CHAOS CHALLENGE · NEW FEATURES ACTIVE'
+      : 'CLASSIC STORY · CHAOS UNLOCKS AFTER 3 PASTRIES');
     const squeak = el<HTMLButtonElement>('squeak');
     const ready = pantry.squeakCooldown <= 0 && rat.energy >= 8 && rat.hidden !== 'Home';
     squeak.disabled = !ready;
@@ -293,11 +301,12 @@ touch.addEventListener('change', () => {
   thumbs.hidden = !hasTouchControls() || scene.mode !== 'play';
   fit();
 });
-start.onclick = () => scene.start();
+start.onclick = () => scene.start('classic');
+chaosStart.onclick = () => scene.start('chaos');
 el('pause').onclick = () => scene.pause();
 el('end-action').onclick = () =>
-  scene.mode === 'pause' ? scene.pause() : scene.start();
-el('restart').onclick = () => scene.start();
+  scene.mode === 'pause' ? scene.pause() : scene.start(scene.playStyle);
+el('restart').onclick = () => scene.start(scene.playStyle);
 function soundLabel() {
   write(el('sound'), sound.muted ? '♪  Sound off' : '♫  Sound on');
   el('sound').setAttribute('aria-pressed', String(!sound.muted));

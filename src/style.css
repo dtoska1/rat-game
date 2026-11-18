@@ -1009,3 +1009,73 @@ button {
   }
   .touch-game .actions button[data-control='squeak'] { min-width: 66px; }
 }
+
+/* Visible V3.4 edition marker and two clearly different starting missions. */
+.release-stamp {
+  display: inline-block;
+  white-space: nowrap;
+  font: 800 10px 'DM Sans', sans-serif;
+  letter-spacing: .065em;
+  color: #704533;
+  background: #f9dea7;
+  border: 1px solid #765a3e;
+  border-radius: 6px;
+  padding: 5px 7px;
+  vertical-align: middle;
+}
+.new-mode-copy {
+  font-size: 13px;
+  line-height: 1.32 !important;
+  background: #f1f8dd;
+  border-left: 3px solid #67935a;
+  padding: 6px 9px;
+  margin-bottom: 6px !important;
+}
+.new-mode-copy strong { color: #47693d; }
+.mode-picks { display: flex; align-items: stretch; gap: 8px; flex-wrap: wrap; }
+.mode-picks button { font-size: 13px; min-height: 44px; font-weight: 800; }
+.mode-picks .chaos-play { background: #b9db8c; flex: 1 1 165px; padding: 9px 12px; }
+.mode-picks .chaos-play:hover { background: #d2f1a9; }
+.secondary-play {
+  border: 2px solid #725545;
+  border-radius: 7px;
+  background: #fff1db;
+  box-shadow: 1px 2px 0 #6f5845;
+  padding: 9px 12px;
+  flex: 1 1 135px;
+}
+.secondary-play:hover { background: #fff7e8; }
+.mode-ribbon {
+  position: absolute;
+  top: 11px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #e9f5ccef;
+  border: 1px solid #6d8054;
+  border-radius: 7px;
+  padding: 5px 8px;
+  font: 800 11px 'DM Sans', sans-serif;
+  color: #42573b;
+  text-align: center;
+  white-space: nowrap;
+  z-index: 6;
+}
+#stage[data-play-style='classic'] .mode-ribbon {
+  background: #fff1d8ef;
+  color: #715443;
+}
+@media (max-aspect-ratio: 1/1) {
+  .brand .release-stamp { font-size: 9px; padding: 4px; }
+  .title-paper .mode-picks button { font-size: 13px; padding: 8px 9px; }
+  .mode-ribbon { top: 49px; font-size: 9px; white-space: normal; max-width: 72%; }
+}
+@media (orientation: landscape) and (max-height: 600px) {
+  .touch-game .brand .release-stamp { display: inline-block; font-size: 9px; }
+  .touch-game .title-paper { width: min(505px, 60%); padding: 10px 16px; }
+  .touch-game .title-paper h1 { font-size: clamp(25px, 3vw, 37px); margin: 4px 0; }
+  .touch-game .title-paper p { font-size: 11px; margin-bottom: 4px; }
+  .touch-game .new-mode-copy { padding: 3px 5px; }
+  .touch-game .mode-picks { gap: 5px; }
+  .touch-game .mode-picks button { flex: 1 1 135px; min-height: 42px; padding: 6px 7px; font-size: 12px; }
+  .touch-game .mode-ribbon { top: 52px; font-size: 9px; max-width: 55%; white-space: normal; }
+}
