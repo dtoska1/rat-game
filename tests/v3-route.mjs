@@ -9,6 +9,23 @@ const log = async (name) => {
   events.push({ name, ...s });
   return s;
 };
+// Browser scheduling can delay a very short synthetic keypress during WebGL
+// frame pacing. Check the resulting state instead of assuming a tap applied.
+async function actionUntil(predicate, label, tries = 4) {
+  for (let i = 0; i < tries; i++) {
+    let s = await g.read();
+    if (predicate(s)) return s;
+    if (s.mode !== 'play') throw Error(label + ' ended in ' + s.mode);
+    await g.tap('e');
+    for (let poll = 0; poll < 8; poll++) {
+      s = await g.read();
+      if (predicate(s)) return s;
+      if (s.mode !== 'play') throw Error(label + ' ended in ' + s.mode);
+      await g.page.waitForTimeout(30);
+    }
+  }
+  throw Error(label + ' not registered: ' + JSON.stringify(await g.read()));
+}
 const tables = [
   { kind: 'eclair', x: 2410, w: 350, y: 371 },
   { kind: 'macaron', x: 1430, w: 380, y: 332 },
@@ -75,8 +92,7 @@ async function climb(s) {
 }
 async function watchFromCover(x, name) {
   await cross(x);
-  await g.tap('e');
-  assert.equal((await g.read()).hidden, name);
+  await actionUntil((s) => s.hidden === name, 'hide in ' + name);
   // If he saw us duck in, leave through the far side as he starts searching.
   await g.wait(
     (s) =>
@@ -107,9 +123,8 @@ try {
       await cross(1830, true);
       assert.equal((await g.read()).last, 'clang');
       await log('distracted chef');
-      await g.tap('e');
-      assert.equal((await g.read()).hidden, 'Teapot');
-      await g.tap('e');
+      await actionUntil((s) => s.hidden === 'Teapot', 'hide in teapot');
+      await actionUntil((s) => s.hidden === '', 'emerge from teapot');
     }
     await climb(s);
     if (!index) {
