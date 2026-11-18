@@ -27,46 +27,12 @@ let standalone = String(html.source)
       js.code.replace(/<\/script/gi, '<\\/script') +
       '</script></body>'
   );
-// V3.6 added two original SVG artworks. A standalone file cannot fetch
-// './assets/*.svg' from disk, so inline *all* emitted assets (SVG, PNG, WebP,
-// font files, etc.), not just WebP thumbnails.
-const mimes = {
-  '.webp': 'image/webp',
-  '.svg': 'image/svg+xml',
-  '.png': 'image/png',
-  '.jpg': 'image/jpeg',
-  '.jpeg': 'image/jpeg',
-  '.woff2': 'font/woff2',
-  '.woff': 'font/woff',
-  '.ttf': 'font/ttf',
-};
-for (const file of output.filter((o) => o.type === 'asset' &&
-  o.fileName !== 'index.html' && !o.fileName.endsWith('.css'))) {
-  const extension = file.fileName.match(/\.[a-z0-9]+$/i)?.[0].toLowerCase();
-  const mime = mimes[extension] ?? 'application/octet-stream';
+for (const file of output.filter((o) => o.fileName.endsWith('.webp'))) {
   standalone = standalone.replaceAll(
     './' + file.fileName,
-    'data:' + mime + ';base64,' + Buffer.from(file.source).toString('base64')
+    'data:image/webp;base64,' + Buffer.from(file.source).toString('base64')
   );
 }
-// Vite encodes inlined SVG assets as percent-escaped data URLs to save bytes.
-// Phaser's SVG loader uses atob() for data URLs, however, so the percent-
-// encoded variant crashes in file:// offline mode. Convert to true base64.
-let svgUrisFixed = 0;
-standalone = standalone.replace(
-  /data:image\/svg\+xml(?:;charset=[a-z0-9-]+)?,([^"'\x60\\\s<>]+)/gi,
-  (uri, encoded) => {
-    try {
-      const raw = decodeURIComponent(encoded);
-      svgUrisFixed++;
-      return 'data:image/svg+xml;base64,' +
-        Buffer.from(raw, 'utf8').toString('base64');
-    } catch {
-      return uri;
-    }
-  }
-);
-console.log('Normalized', svgUrisFixed, 'inline SVG URLs for Phaser/offline.');
 await mkdir('preview', { recursive: true });
 const notices = await readFile('public/third-party-notices.txt','utf8');
 standalone += '\n<!-- Bundled software and font notices\n' + notices.replaceAll('-->', '-- >') + '\n-->\n';
