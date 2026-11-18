@@ -10,7 +10,7 @@ for (const view of ['desktop', 'promax']) {
       'new Chaos launch is available on the title screen');
     await g.shot(view + '-chaos-title');
     await g.page.locator('#start-chaos').click();
-    const started = await g.wait((s) => s.phase === 'cheese' && s.mode === 'play',
+    const started = await g.wait((s) => s.phase === 'cheese' && s.mode === 'play' && s.chefHeat >= 1.1,
       'Chaos begins immediately');
     assert.equal(started.playStyle, 'chaos');
     assert.deepEqual(started.delivered, ['eclair', 'macaron', 'cake']);
