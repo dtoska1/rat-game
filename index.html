@@ -12,13 +12,13 @@
       content="One round rat, three stolen pastries, a hidden-cheese bonus mission and a very upset French chef."
     />
     <link rel="icon" href="./src/v3/art/rat-idle.webp" />
-    <title>Rat Game V3.4 · Chaos Mode Available</title>
+    <title>Rat Game V3.5 · Hard Chaos</title>
   </head>
   <body>
     <main class="book">
       <header class="mast">
         <div class="brand">
-          <img src="./src/v3/art/rat-idle.webp" alt="" /><span>Rat Game</span><span class="release-stamp">V3.4 · NEW MODE</span>
+          <img src="./src/v3/art/rat-idle.webp" alt="" /><span>Rat Game</span><span class="release-stamp">V3.5 · HARD CHAOS</span>
         </div>
         <nav aria-label="Game settings">
           <button id="guide-open">
@@ -41,15 +41,15 @@
             /><img class="hero-loot" src="./src/v3/art/eclair.webp" alt="" />
           </div>
           <div class="title-paper">
-            <span class="eyebrow"><i></i> The kitchen caper · V3.4</span>
+            <span class="eyebrow"><i></i> The kitchen caper · V3.5</span>
             <h1>The Great<br /><em>Pastry Heist</em></h1>
             <p>
               Steal pastries, cause kitchen chaos, and outrun the chef's alarm. New prank challenges every run!
             </p>
-            <p class="new-mode-copy"><strong>NEW!</strong> Play the mop robot, cheese hunt and chef pranks instantly.</p>
+            <p class="new-mode-copy"><strong>NEW!</strong> Two fast mop bots, timed steam jets, angrier chef, and a 38-second escape.</p>
             <p class="best-score" id="best-score">New: 3 random pranks each run</p>
             <div class="mode-picks">
-              <button class="primary chaos-play" id="start-chaos" disabled>⚡ Play NEW Chaos</button>
+              <button class="primary chaos-play" id="start-chaos" disabled>⚡ Play HARD Chaos</button>
               <button class="secondary-play" id="start" disabled>Original story →</button>
             </div>
           </div>
@@ -66,11 +66,12 @@
           <div class="notice" id="notice"></div>
           <div class="notebook-compact" id="notebook-compact">To-do 0/3</div>
           <div id="bonus-hud" class="bonus-hud" hidden>
-            <b>CHAOS ROUND</b>
+            <b>HARD CHAOS ROUND</b>
             <span id="bonus-cheese">Cheese 0/3</span>
             <span id="bonus-gadgets">Pranks 0/2</span>
             <small id="bonus-mop">Jump the mop!</small>
             <small id="notebook-bonus">Mischief 0/3</small>
+            <small id="chaos-pressure">Steam: amber warns, red is hot!</small>
             <strong class="escape-timer" id="escape-timer" hidden>Escape home: 50s</strong>
           </div>
         </div>
@@ -154,7 +155,8 @@
           until your belly is full. Take the whole pastry on the other plate.
           Come back to the hole on the right and use Action to stash it.
         </p>
-        <p><b>Two ways to play.</b> Choose <strong>Play NEW Chaos</strong> on the title screen to start with the mop bot, prank switches and cheese chase immediately. Choose <strong>Original story</strong> to play all three pastry deliveries first and then unlock the chaos round.</p>
+        <p><b>Hard Chaos challenge.</b> Two faster mop robots patrol the kitchen, and floor steam vents glow amber before blasting red-hot steam. Watch the timing, jump over the jets, or hide in cover. The chef becomes more aggressive with each cheese you steal. The MOP, PUFF and QUACK pranks provide shorter windows, and the final escape takes 38 seconds instead of 50.</p>
+        <p><b>Two ways to play.</b> Choose <strong>Play HARD Chaos</strong> on the title screen to start with the mop bot, prank switches and cheese chase immediately. Choose <strong>Original story</strong> to play all three pastry deliveries first and then unlock the chaos round.</p>
         <p>
           <b>Secret cheese round.</b> After stashing all three pastries,
           discover three vintage cheese wedges: one near the spoon, one on a
