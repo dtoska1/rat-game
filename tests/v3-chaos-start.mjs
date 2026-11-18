@@ -5,7 +5,7 @@ for (const view of ['desktop', 'promax']) {
   const g = await openGame(view);
   try {
     const marker = await g.page.locator('.release-stamp').textContent();
-    assert.match(marker, /V3\.6/);
+    assert.match(marker, /V3\.7/);
     assert.equal(await g.page.locator('#start-chaos:enabled').count(), 1,
       'new Chaos launch is available on the title screen');
     await g.shot(view + '-chaos-title');
@@ -50,7 +50,7 @@ for (const view of ['desktop', 'promax']) {
     assert.equal(classic.phase, 'pastries');
     assert.deepEqual(classic.delivered, []);
     g.verify();
-    console.log('PASS ' + view + ': visible V3.5, TWO robots, timed vents, instant Hard Chaos and original story');
+    console.log('PASS ' + view + ': visible V3.7, TWO robots, timed vents, instant Hard Chaos and original story');
   } finally {
     await g.browser.close();
   }
