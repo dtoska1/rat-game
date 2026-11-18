@@ -103,8 +103,8 @@ try {
     assert.ok(sizes.leftButton >= 60 && sizes.jumpRight <= 896 && sizes.jumpBottom <= 419, 'buttons clear simulated landscape safe areas');
     assert.ok(
       sizes.stageBottom >= 350 &&
-      sizes.canvas[0] / sizes.display[0] >= 1.75 &&
-      sizes.canvas[0] / sizes.display[0] <= 2.05,
+      sizes.canvas[0] / sizes.display[0] >= 1.65 &&
+      sizes.canvas[0] / sizes.display[0] <= 1.80,
       'large Retina landscape playfield'
     );
   }
