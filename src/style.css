@@ -125,7 +125,7 @@ nav button:hover,
 }
 .poster {
   overflow: hidden;
-  background-image: url('./v3/art/wall.webp');
+  background-image: url('./assets/room.png');
   background-position: center;
   background-size: cover;
   display: flex;
@@ -426,9 +426,29 @@ dialog h2 {
   font: 700 20px Georgia;
   color: #a5947e;
 }
-.loot-list .stored i {
+ .loot-list .stored i {
   color: var(--green);
 }
+.cheese-mission {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding-left: 16px;
+  border-left: 1px dashed #b8a184;
+  min-width: 140px;
+}
+.cheese-mission img {
+  width: 48px;
+  height: 41px;
+  object-fit: contain;
+  image-rendering: auto;
+}
+.cheese-mission > div { display: grid; gap: 2px; }
+.cheese-mission strong { font-size: 13px; white-space: nowrap; }
+@media (max-width: 760px) {
+  .cheese-mission { border-left: none; border-top: 1px dashed #b8a184; margin-top: 10px; padding: 9px 0 0; }
+}
+
 .keystrip {
   display: flex;
   justify-content: center;

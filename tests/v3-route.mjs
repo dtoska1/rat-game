@@ -136,7 +136,36 @@ try {
     );
     await log('delivered ' + s.kind);
   }
-  assert.equal((await g.read()).mode, 'won');
+  // Finishing the first three deliveries opens a second, distinct cheese hunt.
+  const unlocked = await g.read();
+  assert.equal(unlocked.mode, 'play');
+  assert.equal(unlocked.phase, 'cheese');
+  assert.deepEqual(unlocked.cheese, []);
+  await g.shot('desktop-bonus-unlocked');
+
+  await cross(2020, true);
+  await g.tap('e');
+  assert.deepEqual((await g.read()).cheese, ['spoon']);
+  await log('bonus cheese by the spoon');
+
+  await climb(tables[1]);
+  await g.go(1415);
+  await g.tap('e');
+  assert.deepEqual((await g.read()).cheese, ['spoon', 'table']);
+  await log('bonus cheese on the macaron table');
+
+  await climb(tables[2]);
+  await cross(235);
+  await g.wait((s) => s.y === 530 && s.vy === 0, 'land beside aisle cheese');
+  await g.tap('e');
+  assert.deepEqual((await g.read()).cheese, ['spoon', 'table', 'aisle']);
+  await log('bonus cheese in the far aisle');
+
+  await cross(3090, true);
+  await g.tap('e');
+  const finished = await g.wait((s) => s.mode === 'won', 'all cheese home');
+  assert.equal(finished.complete, true);
+  assert.equal(finished.cheese.length, 3);
   await g.shot('desktop-win');
   const timing = await g.page.evaluate(() => window.ratPlaytest.timing());
   assert.ok(timing.movingFrames > 60);
@@ -155,7 +184,7 @@ try {
       2
     )
   );
-  console.log('PASS all three deliveries', timing);
+  console.log('PASS three deliveries, three cheeses and home finish', timing);
 } catch (e) {
   console.error('Last observation', await g.read());
   await g.shot('route-failure');

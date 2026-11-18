@@ -7,7 +7,7 @@ permissions:
   contents: read
 jobs:
   play:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04 # Playwright 1.58 browser dependencies are not supported on Ubuntu 26.04 yet
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4

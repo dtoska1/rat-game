@@ -1,9 +1,11 @@
 import Phaser from 'phaser';
-import wallUrl from './art/wall.webp?url';
+import wallUrl from '../assets/room.png?url';
+import cheeseUrl from '../assets/cheese.png?url';
 import atlasUrl from './art/kitchen-atlas.webp?url';
 import atlasData from './art/kitchen-atlas.json';
 import {
   FLOOR,
+  cheeseCaches,
   HEIGHT,
   HOME,
   containers,
@@ -38,6 +40,7 @@ export class GameScene extends Phaser.Scene {
   private hint!: Phaser.GameObjects.Text;
   private spoon!: Phaser.GameObjects.Image;
   private foods: Phaser.GameObjects.Image[] = [];
+  private cheeseArt: Phaser.GameObjects.Image[] = [];
   private plates: Phaser.GameObjects.Ellipse[] = [];
   private containerArt: Phaser.GameObjects.Image[] = [];
   private baked!: Phaser.GameObjects.Image;
@@ -61,6 +64,7 @@ export class GameScene extends Phaser.Scene {
   }
   preload() {
     this.load.image('wall', wallUrl);
+    this.load.image('vintage-cheese', cheeseUrl);
     this.load.atlas('ink', atlasUrl, atlasData);
   }
   private art(
@@ -95,7 +99,7 @@ export class GameScene extends Phaser.Scene {
     this.wall = this.add
       .image(0, 0, 'wall')
       .setOrigin(0)
-      .setDisplaySize(HEIGHT * 3, HEIGHT)
+      .setDisplaySize((HEIGHT * 1600) / 680, HEIGHT)
       .setDepth(-2);
     for (const s of stations) {
       const tableFrame = {
@@ -135,6 +139,14 @@ export class GameScene extends Phaser.Scene {
       this.art(p.frame, p.x, FLOOR + 1, p.width, p.height, 5)
     );
     this.spoon = this.art('spoon', SPOON, FLOOR, 89, 96, 4);
+    this.cheeseArt = cheeseCaches.map((cache) =>
+      this.add
+        .image(cache.x, cache.y - 5, 'vintage-cheese')
+        .setOrigin(0.5, 1)
+        .setDisplaySize(62, 48)
+        .setDepth(6)
+        .setVisible(false)
+    );
     this.chefArt = this.art('chef-walk', this.chef.x, FLOOR, 160, 215, 5);
     this.ratArt = this.art('rat-idle', HOME, FLOOR, 68, 59, 7);
     this.cargo = this.art('eclair', 0, 0, 61, 34, 8).setVisible(false);
@@ -246,7 +258,8 @@ export class GameScene extends Phaser.Scene {
     if (vy >= 0 && r.vy < -280) this.sfx.play('jump');
     if (!boost && r.boosting) this.sfx.play('boost');
     if (this.controls.take('act')) p.use(r, this.chef, this.sfx);
-    if (p.delivered.size === 3) {
+    this.chef.heat = p.phase === 'cheese' ? 1 : 0;
+    if (p.complete) {
       this.mode = 'won';
     } else if (this.chef.update(dt, r)) {
       this.mode = 'caught';
@@ -288,9 +301,11 @@ export class GameScene extends Phaser.Scene {
     camera.scrollY = snap
       ? scrollY
       : camera.scrollY + (scrollY - camera.scrollY) * (1 - Math.exp(-12 * dt));
-    const wallWidth = Math.max(HEIGHT * 3, w);
+    // The actual V1/V2 1600×680 illustrated room is a parallax layer.
+    // Preserve its proportions instead of stretching the furniture across V3.
+    const wallWidth = Math.max((HEIGHT * 1600) / 680, w);
     if (this.wall.displayWidth !== wallWidth)
-      this.wall.setDisplaySize(wallWidth, wallWidth / 3);
+      this.wall.setDisplaySize(wallWidth, (wallWidth * 680) / 1600);
     this.wall.x = left - (left * (wallWidth - w)) / Math.max(1, WORLD - w);
     this.moving = Math.abs(r.vx) > 30 || r.climbed;
     const bob = Math.sin(r.phase);
@@ -366,6 +381,14 @@ export class GameScene extends Phaser.Scene {
     this.spoon.setAngle(
       this.pantry.clang > 6 ? Math.sin(this.pantry.clang * 18) * 8 : 0
     );
+    this.cheeseArt.forEach((image, i) => {
+      const cache = cheeseCaches[i];
+      image
+        .setVisible(
+          this.pantry.phase === 'cheese' && !this.pantry.cheeseFound.has(cache.id)
+        )
+        .setY(cache.y - 5 - Math.sin(this.runTime * 4 + i * 2) * 3);
+    });
     stations.forEach((s, i) => {
       const visible =
         !this.pantry.delivered.has(s.kind) && r.carried?.kind !== s.kind;
@@ -428,6 +451,9 @@ export class GameScene extends Phaser.Scene {
       energy: Math.round(r.energy),
       carried: r.carried?.kind ?? null,
       delivered: [...p.delivered],
+      phase: p.phase,
+      cheese: [...p.cheeseFound],
+      complete: p.complete,
       action: p.choose(r).action,
       chef: c.mode,
       chefX: Math.round(c.x),

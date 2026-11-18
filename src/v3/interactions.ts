@@ -1,5 +1,6 @@
 import {
   coverAt,
+  cheeseCaches,
   FLOOR,
   HOME,
   pastryX,
@@ -22,12 +23,18 @@ type Choice = {
     | 'hide'
     | 'clang'
     | 'hungry'
+    | 'collect'
+    | 'finish'
     | 'none';
   label: string;
   station?: Station;
+  cache?: (typeof cheeseCaches)[number];
 };
 export class Pantry {
   delivered = new Set<Pastry>();
+  phase: 'pastries' | 'cheese' = 'pastries';
+  cheeseFound = new Set<string>();
+  complete = false;
   clang = 0;
   last = '';
   message = '';
@@ -36,8 +43,21 @@ export class Pantry {
     if (r.hidden) return { action: 'emerge', label: 'Come out' };
     if (r.carried && Math.abs(r.x - HOME) < 68 && r.y >= FLOOR - 12)
       return { action: 'deliver', label: 'Stash ' + r.carried.name };
+    if (this.phase === 'cheese') {
+      if (
+        this.cheeseFound.size === cheeseCaches.length &&
+        Math.abs(r.x - HOME) < 68 &&
+        r.y >= FLOOR - 12
+      ) return { action: 'finish', label: 'Celebrate the heist!' };
+      const cache = cheeseCaches.find(
+        (c) => !this.cheeseFound.has(c.id) && reachable(r.x, r.y, c.x, c.y)
+      );
+      if (cache)
+        return { action: 'collect', label: 'Pocket ' + cache.name, cache };
+    }
     for (const s of stations) {
       if (
+        this.phase === 'pastries' &&
         !r.carried &&
         !this.delivered.has(s.kind) &&
         reachable(r.x, r.y, pastryX(s), s.top)
@@ -98,8 +118,28 @@ export class Pantry {
         this.delivered.add(r.carried!.kind);
         r.carried = null;
         r.hidden = 'Home';
-        sound.play(this.delivered.size === 3 ? 'win' : 'delivery');
-        this.tell('Safely stashed at home');
+        sound.play('delivery');
+        if (this.delivered.size === stations.length) {
+          this.phase = 'cheese';
+          this.tell('Bonus mission unlocked: find 3 hidden cheese wedges!');
+        } else this.tell('Safely stashed at home');
+        break;
+      case 'collect':
+        this.cheeseFound.add(c.cache!.id);
+        r.energy = Math.min(100, r.energy + 18);
+        chef.distract(c.cache!.x);
+        sound.play('take');
+        this.tell(
+          this.cheeseFound.size === cheeseCaches.length
+            ? 'All cheese pocketed! Sneak back home →'
+            : 'Secret cheese ' + this.cheeseFound.size + '/3 · chef heard you!'
+        );
+        break;
+      case 'finish':
+        this.complete = true;
+        r.hidden = 'Home';
+        sound.play('win');
+        this.tell('A legendary pantry!');
         break;
       case 'clang':
         this.clang = 9;

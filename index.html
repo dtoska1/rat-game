@@ -9,7 +9,7 @@
     <meta name="theme-color" content="#f6edda" />
     <meta
       name="description"
-      content="One round rat, three stolen pastries and a very upset French chef. A hand-drawn stealth platformer."
+      content="One round rat, three stolen pastries, a hidden-cheese bonus mission and a very upset French chef."
     />
     <link rel="icon" href="./src/v3/art/rat-idle.webp" />
     <title>Rat Game · The Great Pastry Heist</title>
@@ -44,7 +44,7 @@
             <span class="eyebrow"><i></i> The kitchen caper</span>
             <h1>The Great<br /><em>Pastry Heist</em></h1>
             <p>
-              Sneak past the chef and bring three pastries home to your hole.
+              Steal three pastries, then hunt the chef’s secret cheeses. Get everything home!
             </p>
             <button class="primary" id="start" disabled>
               Opening kitchen…
@@ -106,6 +106,10 @@
             ><i>○</i>
           </div>
         </div>
+        <div class="cheese-mission" id="cheese-mission" hidden>
+          <img src="./src/assets/cheese.png" alt="" />
+          <div><span class="eyebrow">Bonus heist</span><strong id="cheese-progress">0 / 3 found</strong></div>
+        </div>
       </section>
       <footer class="keystrip">
         <span><kbd>←</kbd><kbd>→</kbd> Move</span
@@ -130,6 +134,12 @@
           <b>Fill up and steal.</b> Use Action beside the small tasting portions
           until your belly is full. Take the whole pastry on the other plate.
           Come back to the hole on the right and use Action to stash it.
+        </p>
+        <p>
+          <b>Secret cheese round.</b> After stashing all three pastries,
+          discover three vintage cheese wedges: one near the spoon, one on a
+          tabletop, and one in the far-left aisle. Pocket each using Action.
+          The chef speeds up during this round, so hide and return home to win.
         </p>
         <p>
           <b>Lose the chef.</b> Hide with Action inside the teapot, under a
