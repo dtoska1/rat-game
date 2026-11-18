@@ -134,7 +134,9 @@ try {
   await g.wait((s) => s.x < 2652, 'jump onto stool');
   await stop();
   await g.wait((s) => s.y === 448 && s.vy === 0, 'touch landing');
-  await walk(2585);
+  // Stay close to the center of the stool/ladder. On high-DPI touch
+  // devices the coasting distance after release varies by a few pixels.
+  await walk(2615);
   await hold('jump');
   await stop();
   await g.wait(
