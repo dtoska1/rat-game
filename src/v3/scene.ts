@@ -636,7 +636,7 @@ export class GameScene extends Phaser.Scene {
   score() {
     const p = this.pantry;
     const points = Math.max(0, Math.round(
-      p.delivered.size * 600 + p.cheeseFound.size * 350 +
+      (this.playStyle === 'classic' ? p.delivered.size * 600 : 0) + p.cheeseFound.size * 350 +
       p.gadgetsUsed.size * 200 + p.notebook.completed * 260 +
       this.rat.energy * 2 + Math.max(0, 180 - this.runTime) * 6 +
       (p.complete ? p.escapeLeft * 7 : 0) -
@@ -644,7 +644,9 @@ export class GameScene extends Phaser.Scene {
     ));
     return {
       points,
-      rank: points >= 4400 ? 'GOLD' : points >= 3700 ? 'SILVER' : 'BRONZE',
+      rank: points >= (this.playStyle === 'chaos' ? 3300 : 4400)
+        ? 'GOLD' : points >= (this.playStyle === 'chaos' ? 2500 : 3700)
+          ? 'SILVER' : 'BRONZE',
       duration: Math.round(this.runTime),
       challenges: p.notebook.completed,
     };
