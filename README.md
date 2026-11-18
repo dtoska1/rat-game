@@ -20,7 +20,7 @@ V3 now uses the **original V1/V2 illustrated room** (`src/assets/room.png`) for 
 
 Move left from home. Tap Jump to land on the **mint stool**, even from directly underneath. Walk to the ladder and tap Jump again to climb to the tabletop. Use Action beside a small tasting portion to refill your energy. The three samples restore 24, 17 and 37 points respectively. At 100%, take the whole pastry on the other plate. Carry it back to the hole and use Action to stash it. Heavier pastries slow you down.
 
-**New second shift:** the third pastry delivery unlocks a secret-cheese scavenger hunt. Pocket wedges near the floor spoon, on the macaron table and in the far-left aisle. The chef patrols faster and sees farther during this mission. You get +18 belly energy per cheese, but picking one up draws the chef's attention. Collect all three, return home, and use Action to finish the heist. This expands the win condition beyond the original three deliveries; replay still resets everything.
+**New second shift — Chaos Round:** the third pastry delivery unlocks a stealth challenge with a roaming mop bot and three interactive kitchen devices. Jump the moving mop or use the green **MOP** breaker to shut it down for 15 seconds. The pink **PUFF** station blinds the chef for eight seconds, while the yellow **QUACK** decoy lures him away and refills 30 energy. Pocket all three cheeses (spoon, macaron table, far-left aisle), activate at least two different gadgets and escape home to win. Picking up cheese gives +18 energy but attracts the chef. The chef also patrols faster and sees farther during the bonus round. Replay resets both missions.
 
 The chef follows a patrol and needs a clear view to spot you. Hide under a table, inside the blue teapot or in the hole. If he watches you disappear, he can investigate that spot. Knocking the spoon brings him to its location. Boost briefly to cross a dangerous sightline, then eat to refill.
 
@@ -54,3 +54,7 @@ See [the playtest report](docs/PLAYTEST-V3.md), [the approval artwork](docs/ART_
 The original V3 plates are in `art-source/v3`. The classic kitchen and vintage cheese assets are preserved in `src/assets`. Run `node scripts/pack-art.mjs` to regenerate the transparent sprite atlas and illustrated wall. Texture frames use a bottom-centre anchor. The rat's physical half-width is 13 world units and its head clearance is 36. Props and actor poses are drawn independently of collision geometry.
 
 `src/v3` separates the kitchen layout and occlusion, player motion, chef behavior, food interactions, sound, input and Phaser scene. `src/main.ts` owns the page HUD and dialogs. The timing-independent simulation advances at 120 fixed steps per second. Artwork in the older `src/assets` and concept folders is retained for reference.
+
+## Smoother mobile rendering
+
+V3 now uses hardware-accelerated WebGL whenever supported, with an automatic Canvas fallback. It caps the backing canvas near 1.5 million pixels instead of rendering a 3× Retina buffer, limits presentation to 60 FPS even on a 120 Hz display, preserves fractional subpixel movement and bounds catch-up physics work after dropped frames. These changes target steady frame pacing, not inflated FPS readings. Append `?debug` to read timing, or `?renderer=canvas&debug` to troubleshoot the old software-rendering path.

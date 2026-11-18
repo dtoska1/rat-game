@@ -102,7 +102,9 @@ try {
     assert.equal(sizes.viewport, 440);
     assert.ok(sizes.leftButton >= 60 && sizes.jumpRight <= 896 && sizes.jumpBottom <= 419, 'buttons clear simulated landscape safe areas');
     assert.ok(
-      sizes.stageBottom >= 350 && sizes.canvas[0] / sizes.display[0] >= 2.9,
+      sizes.stageBottom >= 350 &&
+      sizes.canvas[0] / sizes.display[0] >= 1.75 &&
+      sizes.canvas[0] / sizes.display[0] <= 2.05,
       'large Retina landscape playfield'
     );
   }
@@ -132,7 +134,9 @@ try {
   await g.wait((s) => s.x < 2652, 'jump onto stool');
   await stop();
   await g.wait((s) => s.y === 448 && s.vy === 0, 'touch landing');
-  await walk(2585);
+  // Stay close to the center of the stool/ladder. On high-DPI touch
+  // devices the coasting distance after release varies by a few pixels.
+  await walk(2615);
   await hold('jump');
   await stop();
   await g.wait(

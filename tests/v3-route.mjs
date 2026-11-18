@@ -9,6 +9,23 @@ const log = async (name) => {
   events.push({ name, ...s });
   return s;
 };
+// Browser scheduling can delay a very short synthetic keypress during WebGL
+// frame pacing. Check the resulting state instead of assuming a tap applied.
+async function actionUntil(predicate, label, tries = 4) {
+  for (let i = 0; i < tries; i++) {
+    let s = await g.read();
+    if (predicate(s)) return s;
+    if (s.mode !== 'play') throw Error(label + ' ended in ' + s.mode);
+    await g.tap('e');
+    for (let poll = 0; poll < 8; poll++) {
+      s = await g.read();
+      if (predicate(s)) return s;
+      if (s.mode !== 'play') throw Error(label + ' ended in ' + s.mode);
+      await g.page.waitForTimeout(30);
+    }
+  }
+  throw Error(label + ' not registered: ' + JSON.stringify(await g.read()));
+}
 const tables = [
   { kind: 'eclair', x: 2410, w: 350, y: 371 },
   { kind: 'macaron', x: 1430, w: 380, y: 332 },
@@ -23,7 +40,9 @@ async function cross(goal, ringSpoon = false) {
   let sprint = false;
   try {
     const until = Date.now() + 35000;
-    while ((s.x - goal) * dir < -4) {
+    // Release before reaching the interaction point: the rat coasts roughly
+    // one body-width after the key is released, especially at mobile FPS.
+    while ((s.x - goal) * dir < -45) {
       if (s.mode !== 'play' || Date.now() > until)
         throw Error('patrol crossing ' + JSON.stringify(s));
       if (ringSpoon && s.action === 'clang') {
@@ -73,8 +92,7 @@ async function climb(s) {
 }
 async function watchFromCover(x, name) {
   await cross(x);
-  await g.tap('e');
-  assert.equal((await g.read()).hidden, name);
+  await actionUntil((s) => s.hidden === name, 'hide in ' + name);
   // If he saw us duck in, leave through the far side as he starts searching.
   await g.wait(
     (s) =>
@@ -84,6 +102,15 @@ async function watchFromCover(x, name) {
     'wait for the patrol to pass ' + name,
     65000
   );
+  // After the flour sack, merely facing away at x1300 is not enough: the
+  // chef can turn around while the cake is being carried across his lane.
+  if (name === 'Flour sack') {
+    await g.wait(
+      (s) => s.chef === 'patrol' && s.chefX > 1860 && s.facing === 1,
+      'chef safely beyond the sack before the escape',
+      65000
+    );
+  }
   await log('waited in ' + name);
   await g.tap('e');
 }
@@ -96,9 +123,8 @@ try {
       await cross(1830, true);
       assert.equal((await g.read()).last, 'clang');
       await log('distracted chef');
-      await g.tap('e');
-      assert.equal((await g.read()).hidden, 'Teapot');
-      await g.tap('e');
+      await actionUntil((s) => s.hidden === 'Teapot', 'hide in teapot');
+      await actionUntil((s) => s.hidden === '', 'emerge from teapot');
     }
     await climb(s);
     if (!index) {
@@ -143,7 +169,20 @@ try {
   assert.deepEqual(unlocked.cheese, []);
   await g.shot('desktop-bonus-unlocked');
 
+  // Power breaker is a deliberate choice: it disables the roaming mop.
+  await cross(2700);
+  await g.wait((s) => s.y === 530 && s.vy === 0, 'reach floor breaker');
+  assert.equal((await g.read()).action, 'gadget');
+  await g.tap('e');
+  assert.deepEqual((await g.read()).pranks, ['breaker']);
+  assert.ok((await g.read()).mopDisabled > 0);
+  await log('mop breaker sabotaged');
+
+  // cross() brakes ~40 world units past its goal, so target to the right
+  // of this floor cheese and verify the contextual pickup before tapping.
   await cross(2020, true);
+  await g.wait((s) => s.y === 530 && s.vy === 0, 'floor cheese landing');
+  assert.equal((await g.read()).action, 'collect');
   await g.tap('e');
   assert.deepEqual((await g.read()).cheese, ['spoon']);
   await log('bonus cheese by the spoon');
@@ -153,6 +192,15 @@ try {
   await g.tap('e');
   assert.deepEqual((await g.read()).cheese, ['spoon', 'table']);
   await log('bonus cheese on the macaron table');
+
+  // Throw flour in the chef's eyes before crossing his patrol lane again.
+  await cross(990);
+  await g.wait((s) => s.y === 530 && s.vy === 0, 'land beside flour cloud');
+  assert.equal((await g.read()).action, 'gadget');
+  await g.tap('e');
+  assert.deepEqual((await g.read()).pranks, ['breaker', 'flour']);
+  assert.ok((await g.read()).chefBlinded > 0);
+  await log('flour cloud triggered');
 
   await climb(tables[2]);
   await cross(235);
@@ -166,6 +214,7 @@ try {
   const finished = await g.wait((s) => s.mode === 'won', 'all cheese home');
   assert.equal(finished.complete, true);
   assert.equal(finished.cheese.length, 3);
+  assert.equal(finished.pranks.length, 2);
   await g.shot('desktop-win');
   const timing = await g.page.evaluate(() => window.ratPlaytest.timing());
   assert.ok(timing.movingFrames > 60);
@@ -184,7 +233,7 @@ try {
       2
     )
   );
-  console.log('PASS three deliveries, three cheeses and home finish', timing);
+  console.log('PASS three deliveries, cheese hunt, two pranks, mop and home', timing);
 } catch (e) {
   console.error('Last observation', await g.read());
   await g.shot('route-failure');

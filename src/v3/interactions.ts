@@ -1,6 +1,8 @@
 import {
   coverAt,
   cheeseCaches,
+  gadgets,
+  REQUIRED_GADGETS,
   FLOOR,
   HOME,
   pastryX,
@@ -24,16 +26,20 @@ type Choice = {
     | 'clang'
     | 'hungry'
     | 'collect'
+    | 'gadget'
     | 'finish'
     | 'none';
   label: string;
   station?: Station;
   cache?: (typeof cheeseCaches)[number];
+  gadget?: (typeof gadgets)[number];
 };
 export class Pantry {
   delivered = new Set<Pastry>();
   phase: 'pastries' | 'cheese' = 'pastries';
   cheeseFound = new Set<string>();
+  gadgetsUsed = new Set<string>();
+  mopDisabled = 0;
   complete = false;
   clang = 0;
   last = '';
@@ -46,6 +52,7 @@ export class Pantry {
     if (this.phase === 'cheese') {
       if (
         this.cheeseFound.size === cheeseCaches.length &&
+        this.gadgetsUsed.size >= REQUIRED_GADGETS &&
         Math.abs(r.x - HOME) < 68 &&
         r.y >= FLOOR - 12
       ) return { action: 'finish', label: 'Celebrate the heist!' };
@@ -54,6 +61,13 @@ export class Pantry {
       );
       if (cache)
         return { action: 'collect', label: 'Pocket ' + cache.name, cache };
+      // Devices sit on the floor, close enough to use without pixel-perfect positioning.
+      const gadget = gadgets.find(
+        (g) => !this.gadgetsUsed.has(g.id) &&
+          r.y >= FLOOR - 12 && Math.abs(r.x - g.x) < 56
+      );
+      if (gadget)
+        return { action: 'gadget', label: 'Sabotage ' + gadget.name, gadget };
     }
     for (const s of stations) {
       if (
@@ -135,6 +149,25 @@ export class Pantry {
             : 'Secret cheese ' + this.cheeseFound.size + '/3 · chef heard you!'
         );
         break;
+      case 'gadget': {
+        const g = c.gadget!;
+        this.gadgetsUsed.add(g.id);
+        if (g.id === 'breaker') {
+          this.mopDisabled = 15;
+          chef.distract(1180);
+          this.tell('CLICK! Mop bot is asleep for 15 seconds.');
+        } else if (g.id === 'flour') {
+          chef.blinded = 8;
+          chef.distract(2550);
+          this.tell('POOF! Chef cannot see through the flour for 8 seconds.');
+        } else {
+          chef.distract(2550);
+          r.energy = Math.min(100, r.energy + 30);
+          this.tell('SQUEAK! Chef follows the duck. +30 energy!');
+        }
+        sound.play('spoon');
+        break;
+      }
       case 'finish':
         this.complete = true;
         r.hidden = 'Home';

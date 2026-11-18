@@ -68,7 +68,7 @@ function refresh() {
         lost
           ? 'The chef has baked you into his signature cake. At least the ears are flattering.'
           : won
-            ? 'Three pastries and three secret cheeses! The chef will never recover from this.'
+            ? 'Three pastries, three cheeses and two kitchen pranks. The chef has officially lost control of his kitchen.'
             : 'Your rat will wait right here.'
       );
       write(
@@ -98,9 +98,9 @@ function refresh() {
       pantry.messageTime > 0
         ? pantry.message
         : pantry.phase === 'cheese'
-          ? pantry.cheeseFound.size === 3
-            ? 'All cheese pocketed · get home →'
-            : 'Bonus cheese hunt · ' + pantry.cheeseFound.size + ' / 3 found'
+          ? pantry.cheeseFound.size === 3 && pantry.gadgetsUsed.size >= 2
+            ? 'All missions done · escape home →'
+            : 'Cheese ' + pantry.cheeseFound.size + '/3 · pranks ' + pantry.gadgetsUsed.size + '/2 · dodge the mop!'
         : rat.hidden && rat.hidden !== 'Home'
           ? 'Hidden · ' + rat.hidden
           : rat.carried
@@ -127,6 +127,7 @@ function refresh() {
       clang: 'Clang',
       hungry: 'Action',
       collect: 'Pocket',
+      gadget: 'Prank!',
       finish: 'Win!',
       none: 'Action',
     };
@@ -141,6 +142,11 @@ function refresh() {
   );
   el('cheese-mission').hidden = pantry.phase !== 'cheese' && mode !== 'won';
   write(el('cheese-progress'), pantry.cheeseFound.size + ' / 3 found');
+  write(el('prank-progress'), pantry.gadgetsUsed.size + ' / 2 sabotaged');
+  el('bonus-hud').hidden = pantry.phase !== 'cheese' || mode !== 'play';
+  write(el('bonus-cheese'), 'Cheese ' + pantry.cheeseFound.size + '/3');
+  write(el('bonus-gadgets'), 'Pranks ' + pantry.gadgetsUsed.size + '/2');
+  write(el('bonus-mop'), pantry.mopDisabled > 0 ? 'Mop sleeping' : 'Jump the mop!');
   loot.forEach((n) => {
     const done = pantry.delivered.has(
       n.dataset.loot as (typeof stations)[number]['kind']
@@ -163,10 +169,12 @@ function refresh() {
 function measureView() {
   const width = Math.max(1, stage.clientWidth),
     height = Math.max(1, stage.clientHeight);
+  // A 3× iPhone canvas was redrawing nearly three million pixels per frame.
+  // Prefer crisp 2× artwork, but fit the backing store into a mobile-safe budget.
   const density = Math.min(
     window.devicePixelRatio || 1,
-    3,
-    Math.sqrt(3200000 / (width * height))
+    hasTouchControls() ? 2 : 1.75,
+    Math.sqrt(1500000 / (width * height))
   );
   const landscapePhone =
     hasTouchControls() &&
@@ -199,10 +207,12 @@ document.addEventListener('dblclick', preventPlayZoom);
 document.documentElement.classList.toggle('touch-game', hasTouchControls());
 const initialView = measureView();
 scene.visibleHeight = initialView.visibleHeight;
+// AUTO prefers GPU-accelerated WebGL and falls back to Canvas if unavailable.
+// ?renderer=canvas remains available for troubleshooting older devices.
 const renderer =
-  new URLSearchParams(location.search).get('renderer') === 'webgl'
-    ? Phaser.AUTO
-    : Phaser.CANVAS;
+  new URLSearchParams(location.search).get('renderer') === 'canvas'
+    ? Phaser.CANVAS
+    : Phaser.AUTO;
 const game = new Phaser.Game({
   type: renderer,
   parent: 'world',
@@ -211,8 +221,13 @@ const game = new Phaser.Game({
   backgroundColor: '#f1cc9b',
   scene: [scene],
   scale: { mode: Phaser.Scale.NONE },
-  render: { antialias: true, roundPixels: true, powerPreference: 'low-power' },
-  fps: { target: 60, forceSetTimeOut: false },
+  render: {
+    antialias: true,
+    roundPixels: false, // preserve subpixel smoothness while the camera moves
+    powerPreference: 'high-performance',
+  },
+  // Explicit limit matters on 120 Hz iPhones: target alone does not cap updates.
+  fps: { target: 60, limit: 60, forceSetTimeOut: false },
   audio: { noAudio: true },
   banner: false,
 });
