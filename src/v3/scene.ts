@@ -64,6 +64,9 @@ export class GameScene extends Phaser.Scene {
   private baked!: Phaser.GameObjects.Image;
   private accumulator = 0;
   private camX = HOME;
+  // Camera anticipation eases when the rat changes direction; abrupt lead
+  // reversals made a thumb-driven change of direction look like a frame skip.
+  private cameraLead = 0;
   private endTime = 0;
   private runTime = 0;
   private hudClock = 0;
@@ -281,7 +284,9 @@ export class GameScene extends Phaser.Scene {
         ]);
       }
     });
-    this.scale.on('resize', () => this.syncView(true));
+    // The browser toolbar and orientation can resize the canvas repeatedly.
+    // Do not teleport the camera each time the display size changes.
+    this.scale.on('resize', () => this.syncView(false, 1 / 60));
     this.onChange();
   }
   start(style: 'classic' | 'chaos' = 'classic') {
@@ -354,9 +359,11 @@ export class GameScene extends Phaser.Scene {
       return;
     }
     if (this.mode !== 'play') return;
-    this.accumulator = Math.min(this.accumulator + dt, 5 / 120);
+    // Keep real-time movement even if Safari misses a few display frames.
+    // The old five-step cap could discard simulation time below ~24 FPS.
+    this.accumulator = Math.min(this.accumulator + dt, 10 / 120);
     let steps = 0;
-    while (this.accumulator >= 1 / 120 && this.mode === 'play' && steps++ < 5) {
+    while (this.accumulator >= 1 / 120 && this.mode === 'play' && steps++ < 10) {
       this.tick(1 / 120);
       this.accumulator -= 1 / 120;
     }
@@ -455,7 +462,10 @@ export class GameScene extends Phaser.Scene {
       h = this.scale.height / zoom;
     const half = w * 0.5;
     const clamped = (x: number) => Math.max(half, Math.min(WORLD - half, x));
-    const look = r.x + r.facing * Math.min(105, w * 0.12);
+    const desiredLead = r.facing * Math.min(105, w * 0.12);
+    this.cameraLead = snap ? desiredLead : this.cameraLead +
+      (desiredLead - this.cameraLead) * (1 - Math.exp(-6 * dt));
+    const look = r.x + this.cameraLead;
     const gap = look - this.camX,
       zone = Math.min(64, w * 0.09);
     if (snap) this.camX = clamped(look);
@@ -643,6 +653,11 @@ export class GameScene extends Phaser.Scene {
       delivered: [...p.delivered],
       phase: p.phase,
       playStyle: this.playStyle,
+      cameraX: +this.camX.toFixed(2),
+      cameraLead: +this.cameraLead.toFixed(2),
+      cameraScrollX: +this.cameras.main.scrollX.toFixed(2),
+      renderWidth: this.scale.width,
+      renderHeight: this.scale.height,
       galleryFrames: this.artFrames.map((frame) => ({
         texture: frame.texture.key, visible: frame.visible,
         x: Math.round(frame.x), y: Math.round(frame.y),
