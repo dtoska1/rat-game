@@ -22,6 +22,14 @@ Move left from home. Tap Jump to land on the **mint stool**, even from directly 
 
 **New second shift — Chaos Round:** the third pastry delivery unlocks a stealth challenge with a roaming mop bot and three interactive kitchen devices. Jump the moving mop or use the green **MOP** breaker to shut it down for 15 seconds. The pink **PUFF** station blinds the chef for eight seconds, while the yellow **QUACK** decoy lures him away and refills 30 energy. Pocket all three cheeses (spoon, macaron table, far-left aisle), activate at least two different gadgets and escape home to win. Picking up cheese gives +18 energy but attracts the chef. The chef also patrols faster and sees farther during the bonus round. Replay resets both missions.
 
+### New replayable Mischief Notebook and escape finale
+
+Inspired by the environmental pranks and goals of *Untitled Goose Game*, the food-and-chase tension of *Pizza Possum*, and the varied repeatable activities of *Sneaky Sasquatch*, each new heist picks **three optional prank goals** from six: ring the spoon, taste every sample, hide as the chef investigates the teapot, use the QUACK duck decoy, leap over the moving mop, and squeak to bait the chef. Stamp them for score points; they are **not required** to win.
+
+**Squeak:** Q on desktop or the new touch button lures the chef to the rat's current position. It costs 8 energy and has a 14-second cooldown. Squeak tactically, then hide or escape.
+
+**Final escape:** collecting all three cheeses and sabotaging two devices starts a 50-second kitchen alarm. Run home before it expires. Success awards BRONZE / SILVER / GOLD based on task stamps, loot, time, energy and mop hits. The best score is saved locally in your browser (no account or server required). Restarting picks a new set of optional pranks.
+
 The chef follows a patrol and needs a clear view to spot you. Hide under a table, inside the blue teapot or in the hole. If he watches you disappear, he can investigate that spot. Knocking the spoon brings him to its location. Boost briefly to cross a dangerous sightline, then eat to refill.
 
 | Action | Keyboard | Touch |
@@ -31,6 +39,7 @@ The chef follows a patrol and needs a clear view to spot you. Hide under a table
 | Climb at a ladder | Hold W or up arrow | Tap Jump once |
 | Taste, take, stash, hide or emerge | E | Contextual Action |
 | Boost | Hold Shift while moving | Hold Boost while moving |
+| Squeak (lure chef) | Q | Tap Squeak (14s cooldown) |
 | Pause | Esc | Pause button |
 
 ## Build and test
@@ -45,7 +54,7 @@ npm run build:offline
 node tests/v3-offline.mjs
 ```
 
-The browser tests play through the public controls. The opt-in `?debug` overlay reports frame interval and inputs. Its read-only observations let tests verify what happened. `?renderer=webgl` requests Phaser's accelerated renderer. Canvas is the default for this two-dimensional atlas-based scene. The test report records the interval between game-loop frames, CPU time in the Phaser step and the renderer's CPU submission time.
+The browser tests play through the public controls. The opt-in `?debug` overlay reports frame interval and inputs. Its read-only observations let tests verify what happened. `?renderer=canvas` forces the software renderer; otherwise Phaser prefers WebGL and falls back to Canvas. The test report records the interval between game-loop frames, CPU time in the Phaser step and the renderer's CPU submission time.
 
 See [the playtest report](docs/PLAYTEST-V3.md), [the approval artwork](docs/ART_DIRECTION_V1.md), and [issue #3](https://github.com/dtoska1/rat-game/issues/3). The V3 workflow runs browser tests and attaches artifacts to the check.
 
