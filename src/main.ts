@@ -68,7 +68,7 @@ function refresh() {
         lost
           ? 'The chef has baked you into his signature cake. At least the ears are flattering.'
           : won
-            ? 'Three pastries and three secret cheeses! The chef will never recover from this.'
+            ? 'Three pastries, three cheeses and two kitchen pranks. The chef has officially lost control of his kitchen.'
             : 'Your rat will wait right here.'
       );
       write(
@@ -98,9 +98,9 @@ function refresh() {
       pantry.messageTime > 0
         ? pantry.message
         : pantry.phase === 'cheese'
-          ? pantry.cheeseFound.size === 3
-            ? 'All cheese pocketed · get home →'
-            : 'Bonus cheese hunt · ' + pantry.cheeseFound.size + ' / 3 found'
+          ? pantry.cheeseFound.size === 3 && pantry.gadgetsUsed.size >= 2
+            ? 'All missions done · escape home →'
+            : 'Cheese ' + pantry.cheeseFound.size + '/3 · pranks ' + pantry.gadgetsUsed.size + '/2 · dodge the mop!'
         : rat.hidden && rat.hidden !== 'Home'
           ? 'Hidden · ' + rat.hidden
           : rat.carried
@@ -127,6 +127,7 @@ function refresh() {
       clang: 'Clang',
       hungry: 'Action',
       collect: 'Pocket',
+      gadget: 'Prank!',
       finish: 'Win!',
       none: 'Action',
     };
@@ -141,6 +142,11 @@ function refresh() {
   );
   el('cheese-mission').hidden = pantry.phase !== 'cheese' && mode !== 'won';
   write(el('cheese-progress'), pantry.cheeseFound.size + ' / 3 found');
+  write(el('prank-progress'), pantry.gadgetsUsed.size + ' / 2 sabotaged');
+  el('bonus-hud').hidden = pantry.phase !== 'cheese' || mode !== 'play';
+  write(el('bonus-cheese'), 'Cheese ' + pantry.cheeseFound.size + '/3');
+  write(el('bonus-gadgets'), 'Pranks ' + pantry.gadgetsUsed.size + '/2');
+  write(el('bonus-mop'), pantry.mopDisabled > 0 ? 'Mop sleeping' : 'Jump the mop!');
   loot.forEach((n) => {
     const done = pantry.delivered.has(
       n.dataset.loot as (typeof stations)[number]['kind']
