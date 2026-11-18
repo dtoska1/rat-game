@@ -994,8 +994,8 @@ button {
 }
 @media (max-aspect-ratio: 1/1) {
   .actions, .directions { gap: 3px; }
-  .directions button { min-width: 41px; padding: 0 3px; }
-  .actions button { min-width: 43px; padding: 0 3px; font-size: 11px; }
+  .directions button { min-width: 46px; padding: 0 3px; }
+  .actions button { min-width: 46px; padding: 0 3px; font-size: 11px; }
   .actions button[data-control='squeak'] { min-width: 46px; font-size: 11px; }
   .actions .jump { min-width: 49px; padding: 0 3px; }
   .notebook-board { padding: 9px 12px; }
