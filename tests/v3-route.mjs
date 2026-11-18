@@ -156,6 +156,7 @@ try {
 
   await climb(tables[2]);
   await cross(235);
+  await g.wait((s) => s.y === 530 && s.vy === 0, 'land beside aisle cheese');
   await g.tap('e');
   assert.deepEqual((await g.read()).cheese, ['spoon', 'table', 'aisle']);
   await log('bonus cheese in the far aisle');
