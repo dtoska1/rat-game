@@ -161,7 +161,11 @@ try {
   assert.ok((await g.read()).mopDisabled > 0);
   await log('mop breaker sabotaged');
 
-  await cross(2020, true);
+  // cross() brakes ~40 world units past its goal, so target to the right
+  // of this floor cheese and verify the contextual pickup before tapping.
+  await cross(2065, true);
+  await g.wait((s) => s.y === 530 && s.vy === 0, 'floor cheese landing');
+  assert.equal((await g.read()).action, 'collect');
   await g.tap('e');
   assert.deepEqual((await g.read()).cheese, ['spoon']);
   await log('bonus cheese by the spoon');
