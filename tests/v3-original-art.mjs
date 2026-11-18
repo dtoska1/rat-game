@@ -16,8 +16,8 @@ for (const viewport of ['desktop', 'promax']) {
     }
     await g.page.locator('#gallery-open').click();
     assert.equal(await g.page.locator('#art-gallery').evaluate((el) => el.open), true);
-    assert.match(await g.page.locator('#gallery-heading').textContent(), /Drawing 2/);
-    assert.match(await g.page.locator('#gallery-source').textContent(), /drawing 2.pdf/);
+    assert.match(await g.page.locator('#gallery-heading').textContent(), /k🫶🏼/);
+    assert.match(await g.page.locator('#gallery-source').textContent(), /k🫶🏼/);
     assert.ok(await g.page.locator('#gallery-image').evaluate((img) =>
       img.complete && img.naturalWidth > 0
     ));
@@ -46,7 +46,7 @@ for (const viewport of ['desktop', 'promax']) {
     await g.page.locator('#gallery-done').click();
     await g.wait((s) => s.mode === 'play', 'game resumes after gallery');
     g.verify();
-    console.log('PASS ' + viewport + ': featured Drawing 2, secondary sketch, wall frames and pause-safe gallery');
+    console.log('PASS ' + viewport + ': featured k🫶🏼, secondary sketch, wall frames and pause-safe gallery');
   } finally {
     await g.browser.close();
   }
