@@ -49,6 +49,24 @@ for (const file of output.filter((o) => o.type === 'asset' &&
     'data:' + mime + ';base64,' + Buffer.from(file.source).toString('base64')
   );
 }
+// Vite encodes inlined SVG assets as percent-escaped data URLs to save bytes.
+// Phaser's SVG loader uses atob() for data URLs, however, so the percent-
+// encoded variant crashes in file:// offline mode. Convert to true base64.
+let svgUrisFixed = 0;
+standalone = standalone.replace(
+  /data:image\/svg\+xml(?:;charset=[a-z0-9-]+)?,([^"'\x60\\\s<>]+)/gi,
+  (uri, encoded) => {
+    try {
+      const raw = decodeURIComponent(encoded);
+      svgUrisFixed++;
+      return 'data:image/svg+xml;base64,' +
+        Buffer.from(raw, 'utf8').toString('base64');
+    } catch {
+      return uri;
+    }
+  }
+);
+console.log('Normalized', svgUrisFixed, 'inline SVG URLs for Phaser/offline.');
 await mkdir('preview', { recursive: true });
 const notices = await readFile('public/third-party-notices.txt','utf8');
 standalone += '\n<!-- Bundled software and font notices\n' + notices.replaceAll('-->', '-- >') + '\n-->\n';
