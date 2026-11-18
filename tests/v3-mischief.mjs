@@ -24,7 +24,7 @@ try {
   assert.equal(await g.page.locator('#squeak').isDisabled(), true);
   assert.match(await g.page.locator('#squeak').textContent(), /s$/);
   await g.tap('q');
-  assert.equal((await g.read()).squeaks, undefined, 'squeaks are not public to the HUD');
+  assert.equal((await g.read()).squeaks, 1, 'cooldown prevents repeat bait');
   const again = await g.read();
   assert.ok(again.squeakCooldown > 0);
   assert.equal(again.notebook.length, 3);
