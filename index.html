@@ -44,7 +44,7 @@
             <span class="eyebrow"><i></i> The kitchen caper</span>
             <h1>The Great<br /><em>Pastry Heist</em></h1>
             <p>
-              Steal three pastries, then hunt the chef’s secret cheeses. Get everything home!
+              Steal pastries, pocket hidden cheese, sabotage the kitchen gadgets and outsmart the mop bot!
             </p>
             <button class="primary" id="start" disabled>
               Opening kitchen…
@@ -60,6 +60,12 @@
           <button id="pause" aria-label="Pause game">Ⅱ</button>
           <div class="chef-status" id="chef-status"></div>
           <div class="notice" id="notice"></div>
+          <div id="bonus-hud" class="bonus-hud" hidden>
+            <b>CHAOS ROUND</b>
+            <span id="bonus-cheese">Cheese 0/3</span>
+            <span id="bonus-gadgets">Pranks 0/2</span>
+            <small id="bonus-mop">Jump the mop!</small>
+          </div>
         </div>
         <div class="outcome" id="outcome" hidden>
           <div class="outcome-paper">
@@ -108,7 +114,7 @@
         </div>
         <div class="cheese-mission" id="cheese-mission" hidden>
           <img src="./src/assets/cheese.png" alt="" />
-          <div><span class="eyebrow">Bonus heist</span><strong id="cheese-progress">0 / 3 found</strong></div>
+          <div><span class="eyebrow">Bonus heist</span><strong id="cheese-progress">0 / 3 found</strong><strong id="prank-progress">0 / 2 sabotaged</strong></div>
         </div>
       </section>
       <footer class="keystrip">
@@ -139,7 +145,11 @@
           <b>Secret cheese round.</b> After stashing all three pastries,
           discover three vintage cheese wedges: one near the spoon, one on a
           tabletop, and one in the far-left aisle. Pocket each using Action.
-          The chef speeds up during this round, so hide and return home to win.
+          A little mop robot roams the floor. Jump over it, or activate the
+          green MOP breaker to shut it down for 15 seconds. Prank the chef by
+          using two of the green MOP, pink PUFF and yellow QUACK devices.
+          PUFF blinds the chef for eight seconds. QUACK lures him away and
+          restores energy. Collect all the cheeses, prank him twice and get home.
         </p>
         <p>
           <b>Lose the chef.</b> Hide with Action inside the teapot, under a
