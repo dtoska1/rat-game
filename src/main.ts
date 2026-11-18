@@ -376,12 +376,18 @@ touch.addEventListener('change', () => {
   thumbs.hidden = !hasTouchControls() || scene.mode !== 'play';
   scheduleFit();
 });
-start.onclick = () => scene.start('classic');
-chaosStart.onclick = () => scene.start('chaos');
-el('pause').onclick = () => scene.pause();
-el('end-action').onclick = () =>
-  scene.mode === 'pause' ? scene.pause() : scene.start(scene.playStyle);
-el('restart').onclick = () => scene.start(scene.playStyle);
+// Starting/pausing changes whether the touch deck and mast are visible.
+// Those deliberate layout changes need a synchronous re-fit; only incidental
+// Safari browser-chrome resizes are debounced.
+start.onclick = () => { scene.start('classic'); fit(); };
+chaosStart.onclick = () => { scene.start('chaos'); fit(); };
+el('pause').onclick = () => { scene.pause(); fit(); };
+el('end-action').onclick = () => {
+  if (scene.mode === 'pause') scene.pause();
+  else scene.start(scene.playStyle);
+  fit();
+};
+el('restart').onclick = () => { scene.start(scene.playStyle); fit(); };
 function soundLabel() {
   write(el('sound'), sound.muted ? '♪  Sound off' : '♫  Sound on');
   el('sound').setAttribute('aria-pressed', String(!sound.muted));
