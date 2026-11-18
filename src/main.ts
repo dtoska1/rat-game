@@ -163,10 +163,12 @@ function refresh() {
 function measureView() {
   const width = Math.max(1, stage.clientWidth),
     height = Math.max(1, stage.clientHeight);
+  // A 3× iPhone canvas was redrawing nearly three million pixels per frame.
+  // Prefer crisp 2× artwork, but fit the backing store into a mobile-safe budget.
   const density = Math.min(
     window.devicePixelRatio || 1,
-    3,
-    Math.sqrt(3200000 / (width * height))
+    hasTouchControls() ? 2 : 1.75,
+    Math.sqrt(1500000 / (width * height))
   );
   const landscapePhone =
     hasTouchControls() &&
@@ -199,10 +201,12 @@ document.addEventListener('dblclick', preventPlayZoom);
 document.documentElement.classList.toggle('touch-game', hasTouchControls());
 const initialView = measureView();
 scene.visibleHeight = initialView.visibleHeight;
+// AUTO prefers GPU-accelerated WebGL and falls back to Canvas if unavailable.
+// ?renderer=canvas remains available for troubleshooting older devices.
 const renderer =
-  new URLSearchParams(location.search).get('renderer') === 'webgl'
-    ? Phaser.AUTO
-    : Phaser.CANVAS;
+  new URLSearchParams(location.search).get('renderer') === 'canvas'
+    ? Phaser.CANVAS
+    : Phaser.AUTO;
 const game = new Phaser.Game({
   type: renderer,
   parent: 'world',
@@ -211,8 +215,13 @@ const game = new Phaser.Game({
   backgroundColor: '#f1cc9b',
   scene: [scene],
   scale: { mode: Phaser.Scale.NONE },
-  render: { antialias: true, roundPixels: true, powerPreference: 'low-power' },
-  fps: { target: 60, forceSetTimeOut: false },
+  render: {
+    antialias: true,
+    roundPixels: false, // preserve subpixel smoothness while the camera moves
+    powerPreference: 'high-performance',
+  },
+  // Explicit limit matters on 120 Hz iPhones: target alone does not cap updates.
+  fps: { target: 60, limit: 60, forceSetTimeOut: false },
   audio: { noAudio: true },
   banner: false,
 });
