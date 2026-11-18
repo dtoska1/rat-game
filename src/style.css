@@ -1079,3 +1079,26 @@ button {
   .touch-game .mode-picks button { flex: 1 1 135px; min-height: 42px; padding: 6px 7px; font-size: 12px; }
   .touch-game .mode-ribbon { top: 52px; font-size: 9px; max-width: 55%; white-space: normal; }
 }
+
+/* Hard Chaos: show skipped pastry missions honestly, not as earned trophies. */
+.loot-list > div.skipped { opacity: .58; }
+.loot-list > div.skipped i { color: #776a62; }
+.release-stamp { background: #f8c49c; color: #7b2d25; border-color: #b25f42; }
+#stage[data-play-style='chaos'] .mode-ribbon {
+  background: #ffd3b7ee;
+  border-color: #b64b36;
+  color: #7a342c;
+}
+#stage[data-play-style='chaos'] .bonus-hud {
+  border-color: #b64b36;
+  background: #ffe7d9f0;
+}
+#chaos-pressure { color: #a44929; font-weight: 800; }
+@media (orientation: landscape) and (max-height: 600px) {
+  .touch-game #stage[data-play-style='chaos'] .bonus-hud {
+    max-width: 165px;
+    font-size: 10px;
+    line-height: 1.1;
+  }
+  .touch-game #chaos-pressure { font-size: 9px; }
+}
