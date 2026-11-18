@@ -895,3 +895,32 @@ button {
     padding-left: max(5%, calc(env(safe-area-inset-left) + 14px));
   }
 }
+
+/* Compact second-round objectives work above the touch deck in landscape. */
+.bonus-hud {
+  position: absolute;
+  top: 92px;
+  left: 14px;
+  display: grid;
+  gap: 3px;
+  padding: 7px 10px;
+  font-size: 12px;
+  color: #533a3b;
+  background: #ffebcbed;
+  border: 1px solid #72534e;
+  border-radius: 9px;
+  box-shadow: 1px 2px 0 #77554c44;
+}
+.bonus-hud b { font-size: 11px; letter-spacing: .03em; }
+.bonus-hud small { font-size: 10px; }
+.cheese-mission > div { display: grid; gap: 3px; }
+@media (max-aspect-ratio: 1/1) {
+  .bonus-hud { top: 76px; left: 7px; font-size: 10px; padding: 5px 7px; }
+}
+@media (orientation: landscape) and (max-height: 600px) {
+  .touch-game .bonus-hud {
+    top: 73px;
+    left: max(12px, calc(env(safe-area-inset-left) + 6px));
+    font-size: 10px;
+  }
+}
