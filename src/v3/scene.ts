@@ -3,6 +3,8 @@ import wallUrl from '../assets/room.png?url';
 import cheeseUrl from '../assets/cheese.png?url';
 import atlasUrl from './art/kitchen-atlas.webp?url';
 import atlasData from './art/kitchen-atlas.json';
+import drawing2Url from './art/gallery/drawing-2.svg?url';
+import kitchenSketchUrl from './art/gallery/kitchen-sketch.svg?url';
 import {
   FLOOR,
   cheeseCaches,
@@ -43,6 +45,7 @@ export class GameScene extends Phaser.Scene {
   private chefArt!: Phaser.GameObjects.Image;
   private cargo!: Phaser.GameObjects.Image;
   private wall!: Phaser.GameObjects.Image;
+  private artFrames: Phaser.GameObjects.Image[] = [];
   private chefSign!: Phaser.GameObjects.Text;
   private hint!: Phaser.GameObjects.Text;
   private spoon!: Phaser.GameObjects.Image;
@@ -73,12 +76,15 @@ export class GameScene extends Phaser.Scene {
   constructor(
     public controls: Controls,
     public sfx: Sound,
-    private onChange: () => void
+    private onChange: () => void,
+    private onArtwork: (id: 'drawing2' | 'sketch') => void = () => {}
   ) {
     super('KitchenV3');
   }
   preload() {
     this.load.image('wall', wallUrl);
+    this.load.svg('original-drawing2', drawing2Url);
+    this.load.svg('original-kitchen-sketch', kitchenSketchUrl);
     this.load.image('vintage-cheese', cheeseUrl);
     this.load.atlas('ink', atlasUrl, atlasData);
   }
@@ -116,6 +122,38 @@ export class GameScene extends Phaser.Scene {
       .setOrigin(0)
       .setDisplaySize((HEIGHT * 1600) / 680, HEIGHT)
       .setDepth(-2);
+    // Both actual scanned drawings are on the wall, not recreated in our art style.
+    // Drawing 2 has pride of place by the rat's home, visible on spawn.
+    const frames: {
+      id: 'drawing2' | 'sketch'; texture: string; x: number;
+      y: number; w: number; h: number; label: string; tint: number;
+    }[] = [
+      { id: 'drawing2', texture: 'original-drawing2',
+        x: 2825, y: 286, w: 171, h: 187, label: 'DRAWING 2 ★', tint: 0xc78e75 },
+      { id: 'sketch', texture: 'original-kitchen-sketch',
+        x: 1210, y: 198, w: 171, h: 120, label: 'KITCHEN IDEA', tint: 0x8da9a1 },
+    ];
+    this.artFrames = frames.map((frame) => {
+      this.add.rectangle(frame.x, frame.y, frame.w + 19, frame.h + 20, 0xfff7e7)
+        .setStrokeStyle(7, frame.tint).setDepth(-0.4).setAngle(-1.7);
+      const art = this.add.image(frame.x, frame.y, frame.texture)
+        .setDisplaySize(frame.w, frame.h).setDepth(-0.2)
+        .setInteractive({ useHandCursor: true });
+      art.on('pointerdown', () => {
+        if (this.mode === 'play') this.onArtwork(frame.id);
+      });
+      const tag = this.add.text(frame.x, frame.y + frame.h / 2 + 22,
+        frame.label + ' · TAP', {
+          fontFamily: 'Georgia, serif', fontSize: '12px',
+          color: '#4d352c', fontStyle: 'bold',
+          backgroundColor: '#fff6d9',
+          padding: { x: 5, y: 3 }, resolution: 2,
+        }).setOrigin(0.5).setDepth(2);
+      tag.setInteractive({ useHandCursor: true }).on('pointerdown', () => {
+        if (this.mode === 'play') this.onArtwork(frame.id);
+      });
+      return art;
+    });
     for (const s of stations) {
       const tableFrame = {
         eclair: 'table',
@@ -605,6 +643,10 @@ export class GameScene extends Phaser.Scene {
       delivered: [...p.delivered],
       phase: p.phase,
       playStyle: this.playStyle,
+      galleryFrames: this.artFrames.map((frame) => ({
+        texture: frame.texture.key, visible: frame.visible,
+        x: Math.round(frame.x), y: Math.round(frame.y),
+      })),
       cheese: [...p.cheeseFound],
       pranks: [...p.gadgetsUsed],
       notebook: p.notebook.tasks.map((task) => ({ id: task.id, done: p.notebook.done.has(task.id) })),

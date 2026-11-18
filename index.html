@@ -12,15 +12,16 @@
       content="One round rat, three stolen pastries, a hidden-cheese bonus mission and a very upset French chef."
     />
     <link rel="icon" href="./src/v3/art/rat-idle.webp" />
-    <title>Rat Game V3.5 · Hard Chaos</title>
+    <title>Rat Game V3.6 · Original Drawings Gallery</title>
   </head>
   <body>
     <main class="book">
       <header class="mast">
         <div class="brand">
-          <img src="./src/v3/art/rat-idle.webp" alt="" /><span>Rat Game</span><span class="release-stamp">V3.5 · HARD CHAOS</span>
+          <img src="./src/v3/art/rat-idle.webp" alt="" /><span>Rat Game</span><span class="release-stamp">V3.6 · ORIGINAL ART</span>
         </div>
         <nav aria-label="Game settings">
+          <button id="gallery-open" class="art-nav">🎨 Drawings</button>
           <button id="guide-open">
             <span aria-hidden="true">▤</span> Field guide</button
           ><button id="sound" aria-pressed="false">Sound on</button>
@@ -41,12 +42,13 @@
             /><img class="hero-loot" src="./src/v3/art/eclair.webp" alt="" />
           </div>
           <div class="title-paper">
-            <span class="eyebrow"><i></i> The kitchen caper · V3.5</span>
+            <span class="eyebrow"><i></i> The kitchen caper · V3.6</span>
             <h1>The Great<br /><em>Pastry Heist</em></h1>
             <p>
               Steal pastries, cause kitchen chaos, and outrun the chef's alarm. New prank challenges every run!
             </p>
             <p class="new-mode-copy"><strong>NEW!</strong> Two fast mop bots, timed steam jets, angrier chef, and a 38-second escape.</p>
+            <button id="title-art" class="title-art-link">✎ Original drawings now on the kitchen wall — see them!</button>
             <p class="best-score" id="best-score">New: 3 random pranks each run</p>
             <div class="mode-picks">
               <button class="primary chaos-play" id="start-chaos" disabled>⚡ Play HARD Chaos</button>
@@ -61,6 +63,7 @@
               <small id="short-stash">Home stash 0 / 3</small>
           </div>
           <button id="pause" aria-label="Pause game">Ⅱ</button>
+          <button id="gallery-in-game" class="gallery-in-game" aria-label="Open original artwork gallery">✎ Art</button>
           <div class="chef-status" id="chef-status"></div>
           <div class="mode-ribbon" id="mode-ribbon">CLASSIC HEIST</div>
           <div class="notice" id="notice"></div>
@@ -131,6 +134,24 @@
         <div class="notebook-heading"><span>📓 Mischief notebook</span><strong id="notebook-progress">0 / 3 pranks</strong></div>
         <ul id="note-tasks"><li>Three random kitchen pranks each run</li></ul>
       </section>
+      <section class="original-art-showcase" aria-label="Original artwork from the uploaded sketches">
+        <div class="art-showcase-heading">
+          <div><span class="eyebrow">Straight from your drawings</span><h2>The Rat Game Art Wall</h2></div>
+          <p>Both original drawings live in the kitchen. Tap a frame or open the gallery to see every line.</p>
+        </div>
+        <div class="original-art-grid">
+          <button id="show-featured" class="original-art-card featured-art-card" aria-label="View full drawing 2">
+            <span class="art-card-title">★ Featured artwork — drawing 2</span>
+            <img src="./src/v3/art/gallery/drawing-2.svg" alt="Original drawing 2, featuring a cat, figures, car, sun, clouds and handwritten notes" loading="lazy" />
+            <span class="art-card-foot">Original drawing 2.pdf · Open full artwork</span>
+          </button>
+          <button id="show-sketch" class="original-art-card secondary-art-card" aria-label="View full original kitchen sketch">
+            <span class="art-card-title">The original kitchen idea</span>
+            <img src="./src/v3/art/gallery/kitchen-sketch.svg" alt="Original rat game kitchen sketch with windows, table, rat, chef and spoons" loading="lazy" />
+            <span class="art-card-foot">rat game sketch.pdf · Open sketch</span>
+          </button>
+        </div>
+      </section>
       <footer class="keystrip">
         <span><kbd>←</kbd><kbd>→</kbd> Move</span
         ><span><kbd>Space</kbd> / <kbd>↑</kbd> Jump</span><span><kbd>↑</kbd> at ladder · Climb</span
@@ -138,6 +159,24 @@
         ><span><kbd>Esc</kbd> Pause</span>
       </footer>
     </main>
+    <dialog id="art-gallery" aria-labelledby="gallery-heading">
+      <article class="art-gallery-paper">
+        <button id="gallery-close" class="close" aria-label="Close artwork gallery">×</button>
+        <span class="eyebrow">The original Rat Game art wall</span>
+        <h2 id="gallery-heading">Drawing 2 — featured artwork</h2>
+        <p id="gallery-desc">The priority drawing, shown with its original hand-drawn lines.</p>
+        <div class="art-gallery-switch" role="group" aria-label="Choose drawing">
+          <button id="select-drawing2" class="selected" aria-pressed="true">★ Drawing 2</button>
+          <button id="select-sketch" aria-pressed="false">Kitchen sketch</button>
+        </div>
+        <div class="art-gallery-sheet">
+          <img id="gallery-image" src="./src/v3/art/gallery/drawing-2.svg"
+            alt="Full original drawing 2" />
+        </div>
+        <p class="art-gallery-source" id="gallery-source">Source: drawing 2.pdf</p>
+        <button id="gallery-done" class="primary">Back to the game</button>
+      </article>
+    </dialog>
     <dialog id="guide">
       <article>
         <button id="guide-close" class="close" aria-label="Close field guide">

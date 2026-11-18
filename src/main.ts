@@ -6,6 +6,8 @@ import { Sound } from './v3/sound';
 import { HEIGHT, stations } from './v3/level';
 import ending from './v3/art/ending.webp?url';
 import happy from './v3/art/rat-idle.webp?url';
+import drawing2 from './v3/art/gallery/drawing-2.svg?url';
+import kitchenSketch from './v3/art/gallery/kitchen-sketch.svg?url';
 
 const el = <T extends HTMLElement = HTMLElement>(id: string) =>
   document.getElementById(id) as T;
@@ -19,6 +21,7 @@ const stage = el('stage'),
   start = el<HTMLButtonElement>('start'),
   chaosStart = el<HTMLButtonElement>('start-chaos');
 const dialog = el<HTMLDialogElement>('guide'),
+  artDialog = el<HTMLDialogElement>('art-gallery'),
   sound = new Sound(),
   controls = new Controls();
 const touch = matchMedia('(any-pointer: coarse)'),
@@ -50,7 +53,46 @@ const chefWords = {
   chase: 'Chef in pursuit!',
 };
 let previous: Mode | undefined;
-const scene = new GameScene(controls, sound, refresh);
+const scene = new GameScene(controls, sound, refresh, openArtwork);
+type GalleryArtwork = 'drawing2' | 'sketch';
+const artwork = {
+  drawing2: {
+    src: drawing2, title: 'Drawing 2 — featured original',
+    description: 'Your priority artwork: the cat, car, characters, sun, clouds and handwritten details, preserved from the actual PDF.',
+    source: 'Source: drawing 2.pdf', alt: 'Full original drawing 2',
+  },
+  sketch: {
+    src: kitchenSketch, title: 'Original Rat Game kitchen sketch',
+    description: 'The hand-drawn kitchen idea: three windows and curtains, cake and éclair table, rat, chef and house.',
+    source: 'Source: rat game sketch.pdf', alt: 'Full original kitchen sketch',
+  },
+};
+let resumeAfterGallery = false;
+function chooseArtwork(which: GalleryArtwork) {
+  const item = artwork[which];
+  const photo = el<HTMLImageElement>('gallery-image');
+  photo.src = item.src;
+  photo.alt = item.alt;
+  write(el('gallery-heading'), item.title);
+  write(el('gallery-desc'), item.description);
+  write(el('gallery-source'), item.source);
+  for (const name of ['drawing2', 'sketch'] as const) {
+    const button = el<HTMLButtonElement>(name === 'drawing2'
+      ? 'select-drawing2' : 'select-sketch');
+    const selected = name === which;
+    button.setAttribute('aria-pressed', String(selected));
+    button.classList.toggle('selected', selected);
+  }
+  artDialog.dataset.showing = which;
+}
+function openArtwork(which: GalleryArtwork = 'drawing2') {
+  chooseArtwork(which);
+  if (artDialog.open) return;
+  resumeAfterGallery = scene.mode === 'play';
+  if (resumeAfterGallery) scene.pause();
+  artDialog.showModal();
+}
+
 function refresh() {
   const { mode, rat, chef, pantry } = scene;
   if (previous !== mode) {
@@ -331,6 +373,18 @@ el('sound').onclick = () => {
   soundLabel();
 };
 let resumeOnClose = false;
+el('gallery-open').onclick = () => openArtwork('drawing2');
+el('gallery-in-game').onclick = () => openArtwork('drawing2');
+el('title-art').onclick = () => openArtwork('drawing2');
+el('show-featured').onclick = () => openArtwork('drawing2');
+el('show-sketch').onclick = () => openArtwork('sketch');
+el('select-drawing2').onclick = () => chooseArtwork('drawing2');
+el('select-sketch').onclick = () => chooseArtwork('sketch');
+el('gallery-close').onclick = el('gallery-done').onclick = () => artDialog.close();
+artDialog.addEventListener('close', () => {
+  if (resumeAfterGallery && scene.mode === 'pause') scene.pause();
+  resumeAfterGallery = false;
+});
 el('guide-open').onclick = () => {
   resumeOnClose = scene.mode === 'play';
   if (resumeOnClose) scene.pause();
@@ -342,7 +396,7 @@ dialog.addEventListener('close', () => {
   resumeOnClose = false;
 });
 window.addEventListener('keydown', (e) => {
-  if (e.code === 'Escape' && !dialog.open && !e.repeat) {
+  if (e.code === 'Escape' && !dialog.open && !artDialog.open && !e.repeat) {
     e.preventDefault();
     scene.pause();
   }
