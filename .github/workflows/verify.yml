@@ -30,6 +30,10 @@ jobs:
           exit 1
       - name: Check scrolling camera, resize debouncing and low-GPU fallback
         run: node tests/v3-mobile-fluid.mjs
+      - name: Verify self-contained offline HTML before full playthrough
+        run: |
+          npm run build:offline
+          node tests/v3-offline.mjs
       - name: Verify both original PDF drawings in gameplay and gallery
         run: node tests/v3-original-art.mjs
       - name: Check instant Chaos launch and classic story on desktop/iPhone
@@ -40,8 +44,6 @@ jobs:
         run: npm run test:layout
       - name: Play the kitchen with keyboard and touch
         run: npm run test:game
-      - run: npm run build:offline
-      - run: node tests/v3-offline.mjs
       - uses: actions/upload-artifact@v4
         with:
           name: Rat-Game-V3
