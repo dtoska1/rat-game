@@ -143,6 +143,15 @@ try {
   assert.deepEqual(unlocked.cheese, []);
   await g.shot('desktop-bonus-unlocked');
 
+  // Power breaker is a deliberate choice: it disables the roaming mop.
+  await cross(2700);
+  await g.wait((s) => s.y === 530 && s.vy === 0, 'reach floor breaker');
+  assert.equal((await g.read()).action, 'gadget');
+  await g.tap('e');
+  assert.deepEqual((await g.read()).pranks, ['breaker']);
+  assert.ok((await g.read()).mopDisabled > 0);
+  await log('mop breaker sabotaged');
+
   await cross(2020, true);
   await g.tap('e');
   assert.deepEqual((await g.read()).cheese, ['spoon']);
@@ -153,6 +162,15 @@ try {
   await g.tap('e');
   assert.deepEqual((await g.read()).cheese, ['spoon', 'table']);
   await log('bonus cheese on the macaron table');
+
+  // Throw flour in the chef's eyes before crossing his patrol lane again.
+  await cross(990);
+  await g.wait((s) => s.y === 530 && s.vy === 0, 'land beside flour cloud');
+  assert.equal((await g.read()).action, 'gadget');
+  await g.tap('e');
+  assert.deepEqual((await g.read()).pranks, ['breaker', 'flour']);
+  assert.ok((await g.read()).chefBlinded > 0);
+  await log('flour cloud triggered');
 
   await climb(tables[2]);
   await cross(235);
@@ -166,6 +184,7 @@ try {
   const finished = await g.wait((s) => s.mode === 'won', 'all cheese home');
   assert.equal(finished.complete, true);
   assert.equal(finished.cheese.length, 3);
+  assert.equal(finished.pranks.length, 2);
   await g.shot('desktop-win');
   const timing = await g.page.evaluate(() => window.ratPlaytest.timing());
   assert.ok(timing.movingFrames > 60);
@@ -184,7 +203,7 @@ try {
       2
     )
   );
-  console.log('PASS three deliveries, three cheeses and home finish', timing);
+  console.log('PASS three deliveries, cheese hunt, two pranks, mop and home', timing);
 } catch (e) {
   console.error('Last observation', await g.read());
   await g.shot('route-failure');
