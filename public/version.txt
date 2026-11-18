@@ -1,0 +1,5 @@
+Rat Game V3.4
+Release: 2026-11-18
+Mode select: Play NEW Chaos / Original story
+Instant Chaos: three secret cheeses, mop bot, interactive prank switches, Squeak and Mischief Notebook
+Source: dtoska1/rat-game main
