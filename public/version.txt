@@ -1,5 +1,6 @@
-Rat Game V3.4
+Rat Game V3.5 — HARD CHAOS
 Release: 2026-11-18
-Mode select: Play NEW Chaos / Original story
-Instant Chaos: three secret cheeses, mop bot, interactive prank switches, Squeak and Mischief Notebook
+New features: second roaming mop bot, two telegraphed steam vents, increasing chef fury, shorter gadget effects, 38-second final escape, corrected skipped pastry HUD
+Mode select: Play HARD Chaos / Original story
+Original V1/V2 kitchen background preserved
 Source: dtoska1/rat-game main
