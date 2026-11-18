@@ -521,6 +521,7 @@ export class GameScene extends Phaser.Scene {
       pranks: [...p.gadgetsUsed],
       notebook: p.notebook.tasks.map((task) => ({ id: task.id, done: p.notebook.done.has(task.id) })),
       squeakCooldown: +p.squeakCooldown.toFixed(1),
+      squeaks: p.squeaks,
       escapeActive: p.escapeActive,
       escapeLeft: +p.escapeLeft.toFixed(1),
       mopHits: p.mopHits,
