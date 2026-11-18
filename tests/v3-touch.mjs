@@ -58,12 +58,16 @@ async function walk(x, boost = false) {
 }
 try {
   await g.shot(view + '-title');
-  await g.start();
+  // An iPhone's safe-area insets are known before the player starts the
+  // game, not injected milliseconds after the canvas has been sized.
+  // Set them before the start transition to avoid testing a transient
+  // half-resized layout that real users don't encounter at startup.
   if (view === 'promax') {
     await session.send('Emulation.setSafeAreaInsetsOverride', {
       insets: { left: 60, right: 60, bottom: 21 }
     });
   }
+  await g.start();
   const sizes = await g.page.evaluate(() => {
     const stage = document.querySelector('#stage').getBoundingClientRect(),
       thumbs = document.querySelector('#thumbs').getBoundingClientRect();
