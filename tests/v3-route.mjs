@@ -84,6 +84,15 @@ async function watchFromCover(x, name) {
     'wait for the patrol to pass ' + name,
     65000
   );
+  // After the flour sack, merely facing away at x1300 is not enough: the
+  // chef can turn around while the cake is being carried across his lane.
+  if (name === 'Flour sack') {
+    await g.wait(
+      (s) => s.chef === 'patrol' && s.chefX > 1860 && s.facing === 1,
+      'chef safely beyond the sack before the escape',
+      65000
+    );
+  }
   await log('waited in ' + name);
   await g.tap('e');
 }
