@@ -13,6 +13,7 @@ import {
   type Pastry,
   type Station,
 } from './level';
+import { Notebook } from './notebook';
 import type { Rat } from './rat';
 import type { Chef } from './chef';
 import type { Sound } from './sound';
@@ -35,11 +36,17 @@ type Choice = {
   gadget?: (typeof gadgets)[number];
 };
 export class Pantry {
+  notebook = new Notebook();
   delivered = new Set<Pastry>();
   phase: 'pastries' | 'cheese' = 'pastries';
   cheeseFound = new Set<string>();
   gadgetsUsed = new Set<string>();
   mopDisabled = 0;
+  mopHits = 0;
+  squeakCooldown = 0;
+  squeaks = 0;
+  escapeActive = false;
+  escapeLeft = 0;
   complete = false;
   clang = 0;
   last = '';
@@ -111,6 +118,8 @@ export class Pantry {
         break;
       case 'sample':
         if (r.eating > 0) return;
+        this.notebook.samples.add(c.station!.kind);
+        if (this.notebook.samples.size === 3) this.notebook.stamp('sampler');
         r.energy = Math.min(100, r.energy + c.station!.gain);
         r.eating = 0.4;
         sound.play('eat');
@@ -151,6 +160,7 @@ export class Pantry {
         break;
       case 'gadget': {
         const g = c.gadget!;
+        if (g.id === 'duck') this.notebook.stamp('duck');
         this.gadgetsUsed.add(g.id);
         if (g.id === 'breaker') {
           this.mopDisabled = 15;
@@ -175,6 +185,7 @@ export class Pantry {
         this.tell('A legendary pantry!');
         break;
       case 'clang':
+        this.notebook.stamp('bell');
         this.clang = 9;
         chef.distract(SPOON);
         sound.play('spoon');
@@ -182,5 +193,28 @@ export class Pantry {
         break;
     }
     this.last = c.action;
+  }
+  squeak(r: Rat, chef: Chef, sound: Sound) {
+    if (this.squeakCooldown > 0 || r.energy < 8 || r.hidden === 'Home') return;
+    r.energy -= 8;
+    this.squeakCooldown = 14;
+    this.squeaks++;
+    this.notebook.stamp('squeak');
+    // A squeak deliberately gives away the rat's location: lure him, then flee.
+    chef.distract(r.x);
+    sound.play('spoon');
+    this.tell('SQUEAK! Chef is coming here. Hide or run!');
+  }
+  get readyToEscape() {
+    return this.phase === 'cheese' &&
+      this.cheeseFound.size === cheeseCaches.length &&
+      this.gadgetsUsed.size >= REQUIRED_GADGETS;
+  }
+  startEscape() {
+    if (this.escapeActive || !this.readyToEscape || this.complete) return false;
+    this.escapeActive = true;
+    this.escapeLeft = 50;
+    this.tell('FINAL ESCAPE! 50 seconds to reach home!');
+    return true;
   }
 }
