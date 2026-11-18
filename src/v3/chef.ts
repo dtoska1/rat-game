@@ -9,6 +9,7 @@ export type ChefMode =
 const patrol = [920, 2180, 1290, 2800, 480];
 export class Chef {
   x = 1040;
+  heat = 0; // The secret-cheese round is a faster second shift.
   facing = -1;
   mode: ChefMode = 'patrol';
   alert = 0;
@@ -52,7 +53,7 @@ export class Chef {
       !r.hidden &&
       r.x < HOME - 100 &&
       (dx * this.facing > 0 || distance < 55) &&
-      distance < (r.boosting ? 440 : 365) &&
+      distance < (r.boosting ? 440 : 365) + this.heat * 65 &&
       !blocksSight(this.x, FLOOR - 150, r.x, r.y - 23);
     if (this.seen && !this.lock) {
       this.alert = distance < 165 ? 1 : Math.min(1, this.alert + dt / 0.18);
@@ -81,7 +82,7 @@ export class Chef {
     switch (this.mode) {
       case 'patrol':
         if (this.wait > 0) this.wait -= dt;
-        else if (this.move(patrol[this.waypoint], 88, dt)) {
+        else if (this.move(patrol[this.waypoint], 88 + this.heat * 34, dt)) {
           this.wait = 1.6;
           this.waypoint = (this.waypoint + 1) % patrol.length;
         }
@@ -109,14 +110,14 @@ export class Chef {
         } else {
           this.move(
             Math.min(HOME - 120, this.goal),
-            this.recovery > 0 ? 125 : 248,
+            this.recovery > 0 ? 125 : 248 + this.heat * 52,
             dt
           );
         }
         break;
       }
       case 'investigate':
-        if (this.move(this.goal, 142, dt)) {
+        if (this.move(this.goal, 142 + this.heat * 30, dt)) {
           this.mode = 'search';
           this.wait = 2.4;
         }
