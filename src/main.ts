@@ -279,12 +279,15 @@ function refresh() {
 function measureView() {
   const width = Math.max(1, stage.clientWidth),
     height = Math.max(1, stage.clientHeight);
-  // A 3× iPhone canvas was redrawing nearly three million pixels per frame.
-  // Prefer crisp 2× artwork, but fit the backing store into a mobile-safe budget.
+  // Keep the HTML HUD sharp while reducing the much more expensive WebGL
+  // backing buffer on a phone. This is ~1M pixels in a large iPhone landscape,
+  // not the 3M+ pixel native Retina canvas that previously caused stalls.
+  const requestedQuality = new URLSearchParams(location.search).get('quality');
+  const mobileDensity = requestedQuality === 'low' ? 1.2 : 1.75;
   const density = Math.min(
     window.devicePixelRatio || 1,
-    hasTouchControls() ? 2 : 1.75,
-    Math.sqrt(1500000 / (width * height))
+    hasTouchControls() ? mobileDensity : 1.75,
+    Math.sqrt((hasTouchControls() ? 1150000 : 1500000) / (width * height))
   );
   const landscapePhone =
     hasTouchControls() &&
@@ -336,8 +339,10 @@ const game = new Phaser.Game({
     roundPixels: false, // preserve subpixel smoothness while the camera moves
     powerPreference: 'high-performance',
   },
-  // Explicit limit matters on 120 Hz iPhones: target alone does not cap updates.
-  fps: { target: 60, limit: 60, forceSetTimeOut: false },
+  // Match the display's native requestAnimationFrame cadence. The old fixed
+  // 60-FPS limiter skipped refreshes on ProMotion screens, creating visible
+  // pacing steps while scrolling. Physics stays deterministic at 120Hz.
+  fps: { target: 60, limit: 0, forceSetTimeOut: false },
   audio: { noAudio: true },
   banner: false,
 });
@@ -345,24 +350,44 @@ const fit = () => {
   if (!game.scale.canvas) return;
   const view = measureView();
   scene.visibleHeight = view.visibleHeight;
-  if (view.width !== game.scale.width || view.height !== game.scale.height) {
+  // Avoid expensive GPU buffer reallocations on a 1–2px toolbar nudge.
+  if (Math.abs(view.width - game.scale.width) > 3 ||
+      Math.abs(view.height - game.scale.height) > 3) {
     game.scale.resize(view.width, view.height);
   }
 };
-new ResizeObserver(fit).observe(stage);
-window.addEventListener('resize', fit);
+let fitTimer: number | undefined;
+const scheduleFit = () => {
+  // Safari animates the address bar and sends many viewport/ResizeObserver
+  // events in a short burst. Wait for the dimensions to settle, rather than
+  // snapping the camera and resizing the WebGL drawing buffer every frame.
+  if (fitTimer !== undefined) window.clearTimeout(fitTimer);
+  fitTimer = window.setTimeout(() => {
+    fitTimer = undefined;
+    fit();
+  }, 140);
+};
+new ResizeObserver(scheduleFit).observe(stage);
+window.addEventListener('resize', scheduleFit, { passive: true });
+window.visualViewport?.addEventListener('resize', scheduleFit, { passive: true });
 game.events.once(Phaser.Core.Events.READY, fit);
 touch.addEventListener('change', () => {
   document.documentElement.classList.toggle('touch-game', hasTouchControls());
   thumbs.hidden = !hasTouchControls() || scene.mode !== 'play';
-  fit();
+  scheduleFit();
 });
-start.onclick = () => scene.start('classic');
-chaosStart.onclick = () => scene.start('chaos');
-el('pause').onclick = () => scene.pause();
-el('end-action').onclick = () =>
-  scene.mode === 'pause' ? scene.pause() : scene.start(scene.playStyle);
-el('restart').onclick = () => scene.start(scene.playStyle);
+// Starting/pausing changes whether the touch deck and mast are visible.
+// Those deliberate layout changes need a synchronous re-fit; only incidental
+// Safari browser-chrome resizes are debounced.
+start.onclick = () => { scene.start('classic'); fit(); };
+chaosStart.onclick = () => { scene.start('chaos'); fit(); };
+el('pause').onclick = () => { scene.pause(); fit(); };
+el('end-action').onclick = () => {
+  if (scene.mode === 'pause') scene.pause();
+  else scene.start(scene.playStyle);
+  fit();
+};
+el('restart').onclick = () => { scene.start(scene.playStyle); fit(); };
 function soundLabel() {
   write(el('sound'), sound.muted ? '♪  Sound off' : '♫  Sound on');
   el('sound').setAttribute('aria-pressed', String(!sound.muted));

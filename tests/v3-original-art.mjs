@@ -7,20 +7,20 @@ for (const viewport of ['desktop', 'promax']) {
     // The art is always accessible, even before the player starts.
     assert.equal(await g.page.locator('#gallery-open:visible').count(), 1);
     for (const selector of ['#show-featured img', '#show-sketch img']) {
-      const image = await g.page.locator(selector).evaluate((img) => ({
-        loaded: img.complete && img.naturalWidth > 0,
-        url: img.currentSrc,
-      }));
-      assert.ok(image.loaded, viewport + ': image must load: ' + selector);
-      assert.match(image.url, /\.svg(\?|$)/);
+      // Mobile landscape hides the Art Wall to maximize the playable field.
+      // Images marked loading=lazy are not requested until that section is
+      // visible. Assert their sources; check actual decoding in the gallery.
+      const src = await g.page.locator(selector).getAttribute('src');
+      assert.match(src, /\.svg(\?|$)/, viewport + ' artwork source');
     }
     await g.page.locator('#gallery-open').click();
     assert.equal(await g.page.locator('#art-gallery').evaluate((el) => el.open), true);
     assert.match(await g.page.locator('#gallery-heading').textContent(), /k🫶🏼/);
     assert.match(await g.page.locator('#gallery-source').textContent(), /k🫶🏼/);
-    assert.ok(await g.page.locator('#gallery-image').evaluate((img) =>
-      img.complete && img.naturalWidth > 0
-    ));
+    assert.ok(await g.page.locator('#gallery-image').evaluate(async (img) => {
+      await img.decode();
+      return img.complete && img.naturalWidth > 0;
+    }), 'featured artwork decodes when gallery opens');
     await g.shot('original-art-featured-' + viewport);
     await g.page.locator('#select-sketch').click();
     assert.match(await g.page.locator('#gallery-heading').textContent(), /kitchen sketch/i);
