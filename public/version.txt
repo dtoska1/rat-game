@@ -1,7 +1,9 @@
-Rat Game V3.6 — Original Drawings Gallery
+Rat Game V3.7 — Smooth Mobile Play
 Released: 2026-11-18
-Featured original artwork: k🫶🏼 (framed beside HOME and first in gallery)
-Secondary artwork: rat game sketch.pdf (framed inside the kitchen and in gallery)
-New controls: Drawings button in header, Art inside playable game, clickable kitchen frames, full-size tabs
-Previous V3.5 Hard Chaos remains unchanged
+Camera: eased look-ahead and no resize snapping
+Phone: native display refresh, bounded GPU canvas, stable Safari layout, safe resize handling
+Low graphics fallback: ?quality=low
+Artwork: k🫶🏼 and the kitchen sketch unchanged
+Hard Chaos and Original Story: unchanged
+Hosting: GitHub Pages
 Source: dtoska1/rat-game main
