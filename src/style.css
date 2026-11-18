@@ -924,3 +924,88 @@ button {
     font-size: 10px;
   }
 }
+
+/* Third heist expansion — optional mischief, noise bait, final escape. */
+.best-score {
+  font-size: 12px;
+  font-weight: 700;
+  color: #735045;
+  margin: 0 0 10px !important;
+}
+.score-board {
+  font-size: 14px;
+  font-weight: 700;
+  background: #fff0c7;
+  border: 1px dashed #967c56;
+  border-radius: 7px;
+  padding: 9px 12px;
+  max-width: none !important;
+}
+.notebook-board {
+  margin-top: 12px;
+  padding: 11px 18px;
+  border: 1px dashed #9c816b;
+  border-radius: 9px;
+  background: #fff7e8;
+}
+.notebook-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font-weight: 700;
+  gap: 8px;
+  font-size: 13px;
+}
+.notebook-heading strong { color: #6e7055; font-size: 12px; }
+.notebook-board ul {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px 20px;
+  padding: 0;
+  margin: 9px 0 0;
+}
+.notebook-board li { font-size: 12px; font-weight: 600; }
+.notebook-board li.done { color: #4d7554; text-decoration: line-through; }
+.notebook-compact {
+  position: absolute;
+  bottom: 10px;
+  left: 12px;
+  border-radius: 6px;
+  padding: 4px 8px;
+  background: #fff4d9e5;
+  font-size: 11px;
+  font-weight: 700;
+  border: 1px solid #8c7468;
+  pointer-events: none;
+}
+.escape-timer {
+  color: #a33127;
+  font-weight: 800;
+  font-size: 13px;
+}
+.actions button[data-control='squeak'] {
+  background: #e4dcf3;
+  min-width: 54px;
+}
+.actions button[data-control='squeak']:disabled {
+  opacity: .55;
+  cursor: default;
+}
+@media (max-aspect-ratio: 1/1) {
+  .actions, .directions { gap: 3px; }
+  .directions button { min-width: 46px; padding: 0 3px; }
+  .actions button { min-width: 46px; padding: 0 3px; font-size: 11px; }
+  .actions button[data-control='squeak'] { min-width: 46px; font-size: 11px; }
+  .actions .jump { min-width: 49px; padding: 0 3px; }
+  .notebook-board { padding: 9px 12px; }
+}
+@media (orientation: landscape) and (max-height: 600px) {
+  .touch-game .notebook-board { display: none; }
+  .touch-game .notebook-compact {
+    bottom: 8px;
+    left: max(12px, calc(env(safe-area-inset-left) + 6px));
+    font-size: 10px;
+  }
+  .touch-game .actions button[data-control='squeak'] { min-width: 66px; }
+}

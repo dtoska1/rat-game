@@ -5,7 +5,8 @@ export type Control =
   | 'up'
   | 'space'
   | 'act'
-  | 'boost';
+  | 'boost'
+  | 'squeak';
 const mapping: Record<string, Control> = {
   ArrowLeft: 'left',
   KeyA: 'left',
@@ -15,6 +16,7 @@ const mapping: Record<string, Control> = {
   KeyW: 'up',
   Space: 'space',
   KeyE: 'act',
+  KeyQ: 'squeak',
   ShiftLeft: 'boost',
   ShiftRight: 'boost',
 };

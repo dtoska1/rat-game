@@ -44,8 +44,9 @@
             <span class="eyebrow"><i></i> The kitchen caper</span>
             <h1>The Great<br /><em>Pastry Heist</em></h1>
             <p>
-              Steal pastries, pocket hidden cheese, sabotage the kitchen gadgets and outsmart the mop bot!
+              Steal pastries, cause kitchen chaos, and outrun the chef's alarm. New prank challenges every run!
             </p>
+            <p class="best-score" id="best-score">New: 3 random pranks each run</p>
             <button class="primary" id="start" disabled>
               Opening kitchen…
             </button>
@@ -60,11 +61,14 @@
           <button id="pause" aria-label="Pause game">Ⅱ</button>
           <div class="chef-status" id="chef-status"></div>
           <div class="notice" id="notice"></div>
+          <div class="notebook-compact" id="notebook-compact">To-do 0/3</div>
           <div id="bonus-hud" class="bonus-hud" hidden>
             <b>CHAOS ROUND</b>
             <span id="bonus-cheese">Cheese 0/3</span>
             <span id="bonus-gadgets">Pranks 0/2</span>
             <small id="bonus-mop">Jump the mop!</small>
+            <small id="notebook-bonus">Mischief 0/3</small>
+            <strong class="escape-timer" id="escape-timer" hidden>Escape home: 50s</strong>
           </div>
         </div>
         <div class="outcome" id="outcome" hidden>
@@ -73,6 +77,7 @@
             <span class="eyebrow" id="end-kicker"></span>
             <h2 id="end-title"></h2>
             <p id="end-copy"></p>
+            <p class="score-board" id="score-board" hidden></p>
             <button class="primary" id="end-action"></button
             ><button class="plain" id="restart" hidden>
               Restart from home
@@ -88,6 +93,7 @@
         </div>
         <div class="actions">
           <button data-control="boost">Boost</button
+          ><button data-control="squeak" id="squeak" aria-label="Squeak to lure the chef">Squeak</button
           ><button data-control="act" id="act">Action</button
           ><button data-control="jump" class="jump">Jump</button>
         </div>
@@ -117,10 +123,14 @@
           <div><span class="eyebrow">Bonus heist</span><strong id="cheese-progress">0 / 3 found</strong><strong id="prank-progress">0 / 2 sabotaged</strong></div>
         </div>
       </section>
+      <section class="notebook-board" aria-label="Mischief notebook">
+        <div class="notebook-heading"><span>📓 Mischief notebook</span><strong id="notebook-progress">0 / 3 pranks</strong></div>
+        <ul id="note-tasks"><li>Three random kitchen pranks each run</li></ul>
+      </section>
       <footer class="keystrip">
         <span><kbd>←</kbd><kbd>→</kbd> Move</span
         ><span><kbd>Space</kbd> / <kbd>↑</kbd> Jump</span><span><kbd>↑</kbd> at ladder · Climb</span
-        ><span><kbd>E</kbd> Action</span><span><kbd>Shift</kbd> Boost</span
+        ><span><kbd>E</kbd> Action</span><span><kbd>Q</kbd> Squeak</span><span><kbd>Shift</kbd> Boost</span
         ><span><kbd>Esc</kbd> Pause</span>
       </footer>
     </main>
@@ -151,6 +161,9 @@
           PUFF blinds the chef for eight seconds. QUACK lures him away and
           restores energy. Collect all the cheeses, prank him twice and get home.
         </p>
+        <p><b>Mischief notebook.</b> Each heist chooses three optional silly challenges. Completing them earns more points, but you can finish the story without them. Your current list: <span id="guide-notebook">Start to see your pranks.</span></p>
+        <p><b>Squeak (Q / touch button).</b> Lure the chef to your current location. It costs 8 energy and has a 14-second cooldown. Use it to set up a distraction, but do not squeak if you cannot escape!</p>
+        <p><b>Final escape.</b> Once you have all three cheeses and have sabotaged at least two gadgets, the kitchen alarm starts. Get home within 50 seconds or the chef wins.</p>
         <p>
           <b>Lose the chef.</b> Hide with Action inside the teapot, under a
           table or at home. If he sees you hide, he can search there. Knock the
@@ -159,7 +172,7 @@
         </p>
         <div class="guide-keys">
           A / D or ← / → to walk · Space, W or ↑ to jump · W / ↑ at a ladder to climb · E for Action
-          · Shift to boost · Esc to pause
+          · Shift to boost · Q to squeak · Esc to pause
         </div>
         <button id="guide-done" class="primary">Got it</button>
       </article>

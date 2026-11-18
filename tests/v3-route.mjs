@@ -207,6 +207,9 @@ try {
   await g.wait((s) => s.y === 530 && s.vy === 0, 'land beside aisle cheese');
   await g.tap('e');
   assert.deepEqual((await g.read()).cheese, ['spoon', 'table', 'aisle']);
+  const rush = await g.read();
+  assert.equal(rush.escapeActive, true, 'final escape starts after all missions');
+  assert.ok(rush.escapeLeft > 0 && rush.escapeLeft <= 50);
   await log('bonus cheese in the far aisle');
 
   await cross(3090, true);
@@ -215,6 +218,8 @@ try {
   assert.equal(finished.complete, true);
   assert.equal(finished.cheese.length, 3);
   assert.equal(finished.pranks.length, 2);
+  assert.ok(finished.score > 0);
+  assert.equal(finished.notebook.length, 3);
   await g.shot('desktop-win');
   const timing = await g.page.evaluate(() => window.ratPlaytest.timing());
   assert.ok(timing.movingFrames > 60);
