@@ -23,7 +23,9 @@ async function cross(goal, ringSpoon = false) {
   let sprint = false;
   try {
     const until = Date.now() + 35000;
-    while ((s.x - goal) * dir < -4) {
+    // Release before reaching the interaction point: the rat coasts roughly
+    // one body-width after the key is released, especially at mobile FPS.
+    while ((s.x - goal) * dir < -45) {
       if (s.mode !== 'play' || Date.now() > until)
         throw Error('patrol crossing ' + JSON.stringify(s));
       if (ringSpoon && s.action === 'clang') {
@@ -163,7 +165,7 @@ try {
 
   // cross() brakes ~40 world units past its goal, so target to the right
   // of this floor cheese and verify the contextual pickup before tapping.
-  await cross(2065, true);
+  await cross(2020, true);
   await g.wait((s) => s.y === 530 && s.vy === 0, 'floor cheese landing');
   assert.equal((await g.read()).action, 'collect');
   await g.tap('e');
