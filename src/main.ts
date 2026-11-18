@@ -33,6 +33,25 @@ const debug = el('debug'),
   action = el('act'),
   stash = el('stash-count');
 const hasTouchControls = () => touch.matches || navigator.maxTouchPoints > 0;
+const SWAPPED_HANDS_KEY = 'rat-game-v3-swapped-hands';
+const swapHands = el<HTMLButtonElement>('swap-hands');
+let swappedHands = false;
+try { swappedHands = localStorage.getItem(SWAPPED_HANDS_KEY) === 'yes'; }
+catch { /* Private browsing may block storage. */ }
+function setSwappedHands(swapped: boolean) {
+  swappedHands = swapped;
+  thumbs.classList.toggle('swapped', swapped);
+  swapHands.setAttribute('aria-pressed', String(swapped));
+  write(swapHands, swapped ? '⇄ Back' : '⇄ Swap');
+  swapHands.title = swapped ? 'Return to default hand layout' : 'Swap left and right hand controls';
+  controls.clear(); // Never preserve a held direction after moving buttons.
+}
+setSwappedHands(swappedHands);
+swapHands.onclick = () => {
+  setSwappedHands(!swappedHands);
+  try { localStorage.setItem(SWAPPED_HANDS_KEY, swappedHands ? 'yes' : 'no'); }
+  catch { /* The preference still works until reload. */ }
+};
 const loot = Array.from(document.querySelectorAll<HTMLElement>('[data-loot]'));
 const BEST_SCORE_KEY = 'rat-game-v3-best-score';
 function bestScore(): number {
@@ -213,6 +232,13 @@ function refresh() {
       none: 'Action',
     };
     write(action, short[choice.action]);
+    const readyToAct = choice.action !== 'none' && choice.action !== 'hungry';
+    action.classList.toggle('ready-to-act', readyToAct);
+    const actionDescription = readyToAct
+      ? short[choice.action] + ' nearby object'
+      : 'Action: approach an interactive object';
+    if (action.getAttribute('aria-label') !== actionDescription)
+      action.setAttribute('aria-label', actionDescription);
   }
   const notes = pantry.notebook.tasks;
   const signature = notes.map((n) => n.id + ':' + Number(pantry.notebook.done.has(n.id))).join('|');

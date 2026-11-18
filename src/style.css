@@ -1271,3 +1271,84 @@ button {
   .touch-game .art-gallery-sheet img { max-height: 47dvh; }
   .touch-game .title-art-link { font-size: 10px; padding: 3px 5px; margin: 3px 0; }
 }
+
+
+/* V3 mobile comfort pass — a friendlier two-thumb control deck. */
+#thumbs.swapped {
+  flex-direction: row-reverse;
+}
+#thumbs .swap-hands {
+  flex: 0 0 auto;
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+  border: 1px dashed #ab8d70;
+  border-radius: 14px;
+  background: #fffbef;
+  color: #765742;
+  padding: 0 8px;
+  min-width: 58px;
+  min-height: 44px;
+  font: 700 11px 'DM Sans', sans-serif;
+  box-shadow: none;
+}
+#thumbs .swap-hands[aria-pressed='true'] {
+  background: #d8e7cc;
+  border-color: #658761;
+}
+#thumbs [data-control] {
+  transition: transform 85ms ease, box-shadow 85ms ease, filter 85ms ease;
+}
+#thumbs [data-control].held,
+#thumbs [data-control]:active {
+  transform: translateY(2px) scale(.97);
+  box-shadow: 0 0 0 #7e6257, inset 0 2px 4px #47312928;
+}
+#thumbs [data-control='act'].ready-to-act {
+  background: #a9dfb4;
+  border-color: #48794e;
+  box-shadow: 0 0 0 2px #e1f9d5, 1px 2px 0 #7e6257;
+}
+@media (max-aspect-ratio: 1/1) {
+  /* In portrait the six gameplay buttons already need the full deck width. */
+  #thumbs .swap-hands { display: none; }
+}
+@media (orientation: landscape) and (max-height: 600px) {
+  .touch-game #thumbs {
+    gap: 8px;
+  }
+  .touch-game #thumbs .swap-hands {
+    height: 48px;
+    min-width: 64px;
+    font-size: 12px;
+  }
+  /* Clear the center of the kitchen: show only critical mission counts
+     while the full notebook stays available outside the playfield. */
+  .touch-game #stage[data-play-style='chaos'] .bonus-hud {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    max-width: 245px;
+    gap: 3px 9px;
+    padding: 6px 9px;
+    pointer-events: none;
+  }
+  .touch-game #stage[data-play-style='chaos'] .bonus-hud b,
+  .touch-game #stage[data-play-style='chaos'] #bonus-mop,
+  .touch-game #stage[data-play-style='chaos'] #notebook-bonus,
+  .touch-game #stage[data-play-style='chaos'] #chaos-pressure {
+    display: none;
+  }
+  .touch-game #stage[data-play-style='chaos'] .bonus-hud span {
+    font-size: 11px;
+    font-weight: 800;
+  }
+  .touch-game #stage[data-play-style='chaos'] .escape-timer {
+    flex-basis: 100%;
+    display: block;
+  }
+}
+/* Ensure an inactive bonus round never overlays the classic game. */
+#bonus-hud[hidden], #escape-timer[hidden] { display: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  #thumbs [data-control] { transition: none; }
+}
