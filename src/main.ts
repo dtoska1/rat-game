@@ -30,6 +30,17 @@ const debug = el('debug'),
   stash = el('stash-count');
 const hasTouchControls = () => touch.matches || navigator.maxTouchPoints > 0;
 const loot = Array.from(document.querySelectorAll<HTMLElement>('[data-loot]'));
+const BEST_SCORE_KEY = 'rat-game-v3-best-score';
+function bestScore(): number {
+  try { return Number(localStorage.getItem(BEST_SCORE_KEY) ?? 0) || 0; }
+  catch { return 0; }
+}
+function recordBest(score: number) {
+  if (score <= bestScore()) return false;
+  try { localStorage.setItem(BEST_SCORE_KEY, String(score)); return true; }
+  catch { return false; }
+}
+let notebookSignature = '';
 const chefWords = {
   patrol: 'Chef on patrol',
   suspicious: 'Chef spotted you',
@@ -61,14 +72,24 @@ function refresh() {
       );
       write(
         el('end-title'),
-        lost ? 'Rat à la mode' : won ? 'A full pantry!' : 'Heist paused'
+        lost ? (scene.failureReason === 'alarm' ? 'Chef’s alarm!' : 'Rat à la mode') : won ? 'A full pantry!' : 'Heist paused'
       );
+      const result = scene.score();
+      el('score-board').hidden = !won;
+      if (won) {
+        const newBest = recordBest(result.points);
+        write(el('score-board'), result.rank + ' · ' + result.points.toLocaleString() +
+          ' points · ' + result.duration + 's · ' + result.challenges + '/3 notebook' +
+          (newBest ? ' · NEW PERSONAL BEST!' : ''));
+      }
       write(
         el('end-copy'),
         lost
-          ? 'The chef has baked you into his signature cake. At least the ears are flattering.'
+          ? scene.failureReason === 'alarm'
+            ? 'The kitchen alarm rang before you escaped. Find the exit faster next time!'
+            : 'The chef has baked you into his signature cake. At least the ears are flattering.'
           : won
-            ? 'Three pastries, three cheeses and two kitchen pranks. The chef has officially lost control of his kitchen.'
+            ? 'Three pastries, three cheeses and two kitchen pranks! Check your score and try for GOLD.'
             : 'Your rat will wait right here.'
       );
       write(
@@ -89,6 +110,10 @@ function refresh() {
     previous = mode;
   }
   if (mode === 'play') {
+    const squeak = el<HTMLButtonElement>('squeak');
+    const ready = pantry.squeakCooldown <= 0 && rat.energy >= 8 && rat.hidden !== 'Home';
+    squeak.disabled = !ready;
+    write(squeak, pantry.squeakCooldown > 0 ? Math.ceil(pantry.squeakCooldown) + 's' : 'Squeak');
     const pct = Math.floor(rat.energy);
     write(energy, pct + '%');
     if (fill.style.width !== pct + '%') fill.style.width = pct + '%';
@@ -133,11 +158,31 @@ function refresh() {
     };
     write(action, short[choice.action]);
   }
+  const notes = pantry.notebook.tasks;
+  const signature = notes.map((n) => n.id + ':' + Number(pantry.notebook.done.has(n.id))).join('|');
+  if (notebookSignature !== signature) {
+    notebookSignature = signature;
+    const board = el('note-tasks');
+    board.replaceChildren(...notes.map((task) => {
+      const item = document.createElement('li');
+      const done = pantry.notebook.done.has(task.id);
+      item.className = done ? 'done' : '';
+      item.textContent = (done ? '✓ ' : '○ ') + task.label;
+      return item;
+    }));
+  }
+  write(el('notebook-progress'), pantry.notebook.completed + ' / 3 pranks');
+  write(el('notebook-compact'), 'To-do ' + pantry.notebook.completed + '/3');
+  write(el('guide-notebook'), notes.map((n) => (pantry.notebook.done.has(n.id) ? '✓ ' : '○ ') + n.label).join(' · '));
+  const clock = el('escape-timer');
+  clock.hidden = !pantry.escapeActive || mode !== 'play';
+  if (pantry.escapeActive) write(clock, '⏰ Escape home: ' + Math.ceil(pantry.escapeLeft) + 's');
+  write(el('best-score'), bestScore() ? 'Personal best: ' + bestScore().toLocaleString() : 'New: 3 random pranks each run');
   write(stash, pantry.delivered.size + ' of 3 pastries');
   write(
     el('short-stash'),
     pantry.phase === 'cheese'
-      ? 'Secret cheese ' + pantry.cheeseFound.size + ' / 3'
+      ? (pantry.escapeActive ? 'ESCAPE ' + Math.ceil(pantry.escapeLeft) + 's' : 'Secret cheese ' + pantry.cheeseFound.size + ' / 3')
       : 'Home stash ' + pantry.delivered.size + ' / 3'
   );
   el('cheese-mission').hidden = pantry.phase !== 'cheese' && mode !== 'won';
@@ -147,6 +192,7 @@ function refresh() {
   write(el('bonus-cheese'), 'Cheese ' + pantry.cheeseFound.size + '/3');
   write(el('bonus-gadgets'), 'Pranks ' + pantry.gadgetsUsed.size + '/2');
   write(el('bonus-mop'), pantry.mopDisabled > 0 ? 'Mop sleeping' : 'Jump the mop!');
+  write(el('notebook-bonus'), 'Mischief ' + pantry.notebook.completed + '/3');
   loot.forEach((n) => {
     const done = pantry.delivered.has(
       n.dataset.loot as (typeof stations)[number]['kind']
