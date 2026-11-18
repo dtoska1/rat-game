@@ -25,7 +25,7 @@ for (const view of ['desktop', 'promax']) {
     assert.deepEqual(started.cheese, []);
     assert.deepEqual(started.pranks, []);
     assert.equal(await g.page.locator('#bonus-hud').isVisible(), true);
-    assert.match(await g.page.locator('#mode-ribbon').textContent(), /CHAOS CHALLENGE/);
+    assert.match(await g.page.locator('#mode-ribbon').textContent(), /HARD CHAOS/);
     await g.page.keyboard.down('ArrowLeft');
     await g.wait((s) => s.x < 2910, 'Chaos rat enters kitchen');
     await g.page.keyboard.up('ArrowLeft');
