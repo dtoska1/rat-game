@@ -28,6 +28,8 @@ jobs:
           for i in {1..30}; do curl -fsS http://127.0.0.1:4318/ > /dev/null && exit 0; sleep 1; done
           cat /tmp/rat-preview.log
           exit 1
+      - name: Verify both original PDF drawings in gameplay and gallery
+        run: node tests/v3-original-art.mjs
       - name: Check instant Chaos launch and classic story on desktop/iPhone
         run: node tests/v3-chaos-start.mjs
       - name: Verify new mischief features on a mobile layout
