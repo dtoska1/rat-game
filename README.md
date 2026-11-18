@@ -17,7 +17,7 @@ npm run dev
 
 The two **actual uploaded PDF drawings** now appear in the playable kitchen and a dedicated art gallery. This is faithful artwork from the files, not a newly imagined drawing or a generated replacement. Both PDFs were rasterized as monochrome ink and embedded in portable, self-contained SVG assets, so no third-party image host is needed.
 
-- **drawing 2.pdf (FEATURED):** the primary piece is framed prominently beside the rat's home (visible as soon as a run starts), is the first artwork shown in the gallery, and gets the larger card in the page's Art Wall. It retains the car, cat, characters, sun, clouds and original handwritten notes.
+- **k🫶🏼 (FEATURED):** the primary piece is framed prominently beside the rat's home (visible as soon as a run starts), is the first artwork shown in the gallery, and gets the larger card in the page's Art Wall. It retains the car, cat, characters, sun, clouds and original handwritten notes.
 - **rat game sketch.pdf:** the smaller second frame depicts the original kitchen concept—windows, table, chef, rat, house, utensils and food. This is also available full size in the gallery.
 - **How to see the art:** click **🎨 Drawings** in the game header, **✎ Art** inside the game (including full-screen phone landscape), or click the artwork itself on the kitchen wall. Switch between originals with the two gallery tabs.
 - Viewing artwork pauses gameplay and resumes without resetting your heist. It doesn't affect mission balance, original kitchen background, Hard Chaos, or mobile controls.
