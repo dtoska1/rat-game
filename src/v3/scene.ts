@@ -251,6 +251,7 @@ export class GameScene extends Phaser.Scene {
     this.rat = new Rat();
     this.chef = new Chef();
     this.pantry = new Pantry();
+    this.pantry.hardMode = style === 'chaos';
     this.mop = new MopBot();
     this.guardMop = new MopBot(820, 470, 1190, 160);
     this.steam = new SteamVents();
