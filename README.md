@@ -1,6 +1,6 @@
 # Rat Game · The Great Pastry Heist
 
-A chubby rat, a human pastry chef and one hand-drawn kitchen. Slip out of the hole, climb three pastry tables and bring home an éclair, a macaron and a slice of strawberry cake.
+A chubby rat, a human pastry chef and one hand-drawn kitchen. Slip out of the hole, climb three pastry tables and bring home an éclair, a macaron and a slice of strawberry cake. Then survive a tougher second shift to pocket three secret cheeses and get home.
 
 ## Play the preview
 
@@ -13,9 +13,14 @@ npm ci
 npm run dev
 ```
 
-## The kitchen
+## The classic kitchen and the bonus mission
+
+V3 now uses the **original V1/V2 illustrated room** (`src/assets/room.png`) for its kitchen background and title screen. The foreground V3 sprites, collisions, fixed-step movement, chef and mobile controls remain intact. The classic full-room illustration is a proportion-preserving parallax backdrop; foreground furnishings still define collisions.
+
 
 Move left from home. Tap Jump to land on the **mint stool**, even from directly underneath. Walk to the ladder and tap Jump again to climb to the tabletop. Use Action beside a small tasting portion to refill your energy. The three samples restore 24, 17 and 37 points respectively. At 100%, take the whole pastry on the other plate. Carry it back to the hole and use Action to stash it. Heavier pastries slow you down.
+
+**New second shift:** the third pastry delivery unlocks a secret-cheese scavenger hunt. Pocket wedges near the floor spoon, on the macaron table and in the far-left aisle. The chef patrols faster and sees farther during this mission. You get +18 belly energy per cheese, but picking one up draws the chef's attention. Collect all three, return home, and use Action to finish the heist. This expands the win condition beyond the original three deliveries; replay still resets everything.
 
 The chef follows a patrol and needs a clear view to spot you. Hide under a table, inside the blue teapot or in the hole. If he watches you disappear, he can investigate that spot. Knocking the spoon brings him to its location. Boost briefly to cross a dangerous sightline, then eat to refill.
 
@@ -46,6 +51,6 @@ See [the playtest report](docs/PLAYTEST-V3.md), [the approval artwork](docs/ART_
 
 ## Artwork and code
 
-The original V3 plates are in `art-source/v3`. Run `node scripts/pack-art.mjs` to regenerate the transparent sprite atlas and illustrated wall. Texture frames use a bottom-centre anchor. The rat's physical half-width is 13 world units and its head clearance is 36. Props and actor poses are drawn independently of collision geometry.
+The original V3 plates are in `art-source/v3`. The classic kitchen and vintage cheese assets are preserved in `src/assets`. Run `node scripts/pack-art.mjs` to regenerate the transparent sprite atlas and illustrated wall. Texture frames use a bottom-centre anchor. The rat's physical half-width is 13 world units and its head clearance is 36. Props and actor poses are drawn independently of collision geometry.
 
 `src/v3` separates the kitchen layout and occlusion, player motion, chef behavior, food interactions, sound, input and Phaser scene. `src/main.ts` owns the page HUD and dialogs. The timing-independent simulation advances at 120 fixed steps per second. Artwork in the older `src/assets` and concept folders is retained for reference.
