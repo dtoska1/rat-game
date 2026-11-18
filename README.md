@@ -89,6 +89,10 @@ The original V3 plates are in `art-source/v3`. The classic kitchen and vintage c
 
 `src/v3` separates the kitchen layout and occlusion, player motion, chef behavior, food interactions, sound, input and Phaser scene. `src/main.ts` owns the page HUD and dialogs. The timing-independent simulation advances at 120 fixed steps per second. Artwork in the older `src/assets` and concept folders is retained for reference.
 
+## Smoother mobile camera panning (2026-11-18)
+
+The game now positions Phaser's camera using world-space `centerOn` rather than subtracting half the physical Retina canvas width from world coordinates. This corrects a zoom-dependent camera offset on phones, keeps the illustrated kitchen aligned while moving, and predicts a tiny fraction of the 120 Hz physics step for steadier visual panning. A dedicated Playwright regression samples 130 consecutive rendered frames and checks camera centring and jump-free scrolling in iPhone Pro Max landscape, ordinary landscape and desktop. Full hardware FPS is still device-dependent; `?quality=low&debug` is available as a lightweight test on older phones.
+
 ## Smoother mobile rendering
 
 V3 uses WebGL wherever supported (Canvas fallback), now targets approximately one million backing pixels on a large iPhone rather than native 3× Retina resolution, and matches the display's native animation cadence instead of forcing a 60 FPS cap on 120 Hz phones. Camera look-ahead eases through direction reversals, physics can catch up after more dropped frames without slowing the rat, and Safari viewport/toolbar resize events are debounced rather than constantly rebuilding WebGL buffers and snapping the camera. Landscape touch gameplay uses a stable small viewport height so browser chrome movement does not shift the thumb controls. The `?debug` overlay reports frame pacing; `?quality=low` enables a 1.2× mobile rendering fallback for older or slow phones, while `?renderer=canvas&debug` forces the software renderer for diagnosis. No desktop-browser emulation can certify FPS on a physical iPhone: on-device validation is still required.

@@ -64,6 +64,7 @@ export class GameScene extends Phaser.Scene {
   private baked!: Phaser.GameObjects.Image;
   private accumulator = 0;
   private camX = HOME;
+  private camY = HEIGHT / 2;
   // Camera anticipation eases when the rat changes direction; abrupt lead
   // reversals made a thumb-driven change of direction look like a frame skip.
   private cameraLead = 0;
@@ -465,7 +466,12 @@ export class GameScene extends Phaser.Scene {
     const desiredLead = r.facing * Math.min(105, w * 0.12);
     this.cameraLead = snap ? desiredLead : this.cameraLead +
       (desiredLead - this.cameraLead) * (1 - Math.exp(-6 * dt));
-    const look = r.x + this.cameraLead;
+    // Render-time prediction fills sub-120Hz physics gaps, avoiding the
+    // tiny stop/start quantization visible when a ProMotion phone pans.
+    // The simulation itself remains authoritative and deterministic.
+    const renderX = Math.max(24, Math.min(WORLD - 24,
+      r.x + r.vx * Math.min(this.accumulator, 1 / 120)));
+    const look = renderX + this.cameraLead;
     const gap = look - this.camX,
       zone = Math.min(64, w * 0.09);
     if (snap) this.camX = clamped(look);
@@ -475,11 +481,14 @@ export class GameScene extends Phaser.Scene {
       );
     const left = this.camX - half;
     const top = Math.max(0, Math.min(FLOOR + 48 - h, r.y - 0.34 * h));
-    camera.scrollX = this.camX - this.scale.width * 0.5;
-    const scrollY = top + (h - this.scale.height) * 0.5;
-    camera.scrollY = snap
-      ? scrollY
-      : camera.scrollY + (scrollY - camera.scrollY) * (1 - Math.exp(-12 * dt));
+    // Phaser camera scroll values depend on the *zoomed* world viewport.
+    // Using raw canvas pixels here (scale.width / 2) previously put the
+    // camera center in the wrong coordinate space on Retina mobile screens.
+    // Phaser's centerOn applies the correct zoom transform for us.
+    const targetY = top + h * 0.5;
+    this.camY = snap ? targetY : this.camY +
+      (targetY - this.camY) * (1 - Math.exp(-12 * dt));
+    camera.centerOn(this.camX, this.camY);
     // The actual V1/V2 1600×680 illustrated room is a parallax layer.
     // Preserve its proportions instead of stretching the furniture across V3.
     const wallWidth = Math.max((HEIGHT * 1600) / 680, w);
@@ -656,6 +665,10 @@ export class GameScene extends Phaser.Scene {
       cameraX: +this.camX.toFixed(2),
       cameraLead: +this.cameraLead.toFixed(2),
       cameraScrollX: +this.cameras.main.scrollX.toFixed(2),
+      cameraViewportCenterX: +this.cameras.main.getWorldPoint(
+        this.scale.width / 2, this.scale.height / 2).x.toFixed(2),
+      cameraViewportCenterY: +this.cameras.main.getWorldPoint(
+        this.scale.width / 2, this.scale.height / 2).y.toFixed(2),
       renderWidth: this.scale.width,
       renderHeight: this.scale.height,
       galleryFrames: this.artFrames.map((frame) => ({
