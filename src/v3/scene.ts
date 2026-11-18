@@ -21,7 +21,7 @@ import {
   stool,
 } from './level';
 import { Chef } from './chef';
-import { MopBot } from './chaos';
+import { MopBot, SteamVents, STEAM_VENTS } from './chaos';
 import { Rat } from './rat';
 import { Pantry } from './interactions';
 import { Controls } from './controls';
@@ -33,6 +33,8 @@ export class GameScene extends Phaser.Scene {
   chef = new Chef();
   pantry = new Pantry();
   mop = new MopBot();
+  guardMop = new MopBot(820, 470, 1190, 160);
+  steam = new SteamVents();
   mode: Mode = 'title';
   playStyle: 'classic' | 'chaos' = 'classic';
   failureReason: 'chef' | 'alarm' = 'chef';
@@ -47,6 +49,12 @@ export class GameScene extends Phaser.Scene {
   private foods: Phaser.GameObjects.Image[] = [];
   private cheeseArt: Phaser.GameObjects.Image[] = [];
   private mopArt!: Phaser.GameObjects.Container;
+  private guardMopArt!: Phaser.GameObjects.Container;
+  private ventArt: {
+    plate: Phaser.GameObjects.Container;
+    warning: Phaser.GameObjects.Graphics;
+    hot: Phaser.GameObjects.Graphics;
+  }[] = [];
   private gadgetArt: Phaser.GameObjects.Container[] = [];
   private plates: Phaser.GameObjects.Ellipse[] = [];
   private containerArt: Phaser.GameObjects.Image[] = [];
@@ -165,6 +173,35 @@ export class GameScene extends Phaser.Scene {
     robot.lineStyle(3, 0x60474e).lineBetween(-7, -18, 6, -18);
     this.mopArt = this.add.container(this.mop.x, FLOOR, [robot])
       .setDepth(8).setVisible(false);
+    // Hard Chaos adds a second mop in the far aisle. Both share the MOP breaker.
+    const guard = this.add.graphics();
+    guard.fillStyle(0x62474c).fillCircle(-23, -8, 12).fillCircle(23, -8, 12);
+    guard.fillStyle(0xed9c8e).fillRoundedRect(-39, -41, 78, 32, 12);
+    guard.lineStyle(3, 0x62474c).strokeRoundedRect(-39, -41, 78, 32, 12);
+    guard.fillStyle(0xffffff).fillCircle(-12, -27, 6).fillCircle(12, -27, 6);
+    guard.fillStyle(0x62474c).fillCircle(-12, -27, 3).fillCircle(12, -27, 3);
+    this.guardMopArt = this.add.container(this.guardMop.x, FLOOR, [guard])
+      .setDepth(8).setVisible(false);
+    // Fixed vector artwork is built once; only visibility changes each frame.
+    // Amber is a warning, red steam damages only rats running on the floor.
+    this.ventArt = STEAM_VENTS.map((vent) => {
+      const grate = this.add.graphics();
+      grate.fillStyle(0x71646a).fillRoundedRect(-44, -11, 88, 13, 5);
+      grate.lineStyle(2, 0x493d42).strokeRoundedRect(-44, -11, 88, 13, 5);
+      for (let d = -27; d < 36; d += 18)
+        grate.lineStyle(3, 0xc0a6a1).lineBetween(d, -9, d, -2);
+      const warning = this.add.graphics();
+      warning.fillStyle(0xffc448, 0.75).fillEllipse(0, -35, 86, 65);
+      warning.fillStyle(0x5a372b).fillCircle(0, -35, 7);
+      const hot = this.add.graphics();
+      hot.fillStyle(0xff8e63, 0.36).fillEllipse(0, -49, 92, 100);
+      hot.fillStyle(0xffcab6, 0.65).fillEllipse(-13, -77, 38, 55);
+      hot.fillStyle(0xffd8c2, 0.7).fillEllipse(17, -66, 33, 58);
+      hot.fillStyle(0xff9a72, 0.7).fillCircle(1, -109, 16);
+      const plate = this.add.container(vent.x, FLOOR, [grate, warning, hot])
+        .setDepth(8).setVisible(false);
+      return { plate, warning, hot };
+    });
     this.gadgetArt = gadgets.map((g) => {
       const sketch = this.add.graphics();
       sketch.fillStyle(0x62474c).fillRoundedRect(-37, -52, 74, 44, 7);
@@ -215,12 +252,14 @@ export class GameScene extends Phaser.Scene {
     this.chef = new Chef();
     this.pantry = new Pantry();
     this.mop = new MopBot();
+    this.guardMop = new MopBot(820, 470, 1190, 160);
+    this.steam = new SteamVents();
     if (style === 'chaos') {
       // A separate quick-start route lets players interact with every new
       // mechanic immediately while keeping the full three-pastry story intact.
       this.pantry.delivered = new Set(stations.map((station) => station.kind));
       this.pantry.phase = 'cheese';
-      this.rat.energy = 75;
+      this.rat.energy = 65;
     }
     this.accumulator = 0;
     this.runTime = 0;
@@ -232,7 +271,7 @@ export class GameScene extends Phaser.Scene {
     this.mode = 'play';
     this.sfx.unlock();
     this.pantry.tell(style === 'chaos'
-      ? 'CHAOS MODE! Find cheese, prank the chef and dodge the mop! ←'
+      ? 'HARD CHAOS! Dodge both mops and timed steam jets! ←'
       : '← Find the pink pastry table');
     this.syncView(true);
     this.onChange();
@@ -305,17 +344,40 @@ export class GameScene extends Phaser.Scene {
     if (!boost && r.boosting) this.sfx.play('boost');
     if (this.controls.take('act')) p.use(r, this.chef, this.sfx);
     if (this.controls.take('squeak')) p.squeak(r, this.chef, this.sfx);
-    if (this.mop.update(dt, r, p.phase === 'cheese', p.mopDisabled > 0)) {
+    const hard = this.playStyle === 'chaos';
+    const pace = hard ? 1.3 + p.cheeseFound.size * 0.13 : 1;
+    if (this.mop.update(dt, r, p.phase === 'cheese', p.mopDisabled > 0,
+      pace, hard ? 20 : 16)) {
       p.mopHits++;
       this.chef.distract(this.mop.x);
-      p.tell('BONK! Jump over the mop bot or switch it off. −16 energy');
+      p.tell(hard ? 'BONK! The fast mop took 20 energy!' :
+        'BONK! Jump over the mop bot or switch it off. −16 energy');
+      this.sfx.play('spoon');
+    }
+    if (hard && this.guardMop.update(dt, r, true, p.mopDisabled > 0,
+      1.12 + p.cheeseFound.size * 0.11, 20)) {
+      p.mopHits++;
+      this.chef.distract(this.guardMop.x);
+      p.tell('BONK! The second mop caught you. −20 energy');
+      this.sfx.play('spoon');
+    }
+    const ventHit = this.steam.update(dt, r, hard);
+    if (ventHit !== null) {
+      this.chef.distract(ventHit);
+      p.tell('PSSSH! Steam burnt 13 energy. Watch for amber warnings!');
       this.sfx.play('spoon');
     }
     if (p.phase === 'cheese' && r.y < FLOOR - 65 && Math.abs(r.x - this.mop.x) < 92 && p.mopDisabled <= 0)
       p.notebook.stamp('mop');
     if (r.hidden === 'Teapot' && Math.abs(this.chef.x - 1830) < 220)
       p.notebook.stamp('teapot');
-    if (p.startEscape()) this.sfx.play('spoon');
+    if (p.startEscape()) {
+      if (hard) {
+        p.escapeLeft = 38;
+        p.tell('HARD ESCAPE! Only 38 seconds to reach home!');
+      }
+      this.sfx.play('spoon');
+    }
     if (p.escapeActive && !p.complete) {
       p.escapeLeft = Math.max(0, p.escapeLeft - dt);
       if (p.escapeLeft === 0) {
@@ -324,7 +386,9 @@ export class GameScene extends Phaser.Scene {
         this.sfx.play('caught');
       }
     }
-    this.chef.heat = p.phase === 'cheese' ? (p.escapeActive ? 1.25 : 1) : 0;
+    this.chef.heat = hard
+      ? 1.1 + p.cheeseFound.size * 0.2 + (p.escapeActive ? 0.3 : 0)
+      : p.phase === 'cheese' ? (p.escapeActive ? 1.25 : 1) : 0;
     if (p.complete) {
       this.mode = 'won';
     } else if (this.mode === 'play' && this.chef.update(dt, r)) {
@@ -447,6 +511,17 @@ export class GameScene extends Phaser.Scene {
     this.spoon.setAngle(
       this.pantry.clang > 6 ? Math.sin(this.pantry.clang * 18) * 8 : 0
     );
+    this.guardMopArt
+      .setVisible(this.playStyle === 'chaos')
+      .setAlpha(this.pantry.mopDisabled > 0 ? 0.35 : 1)
+      .setPosition(this.guardMop.x, FLOOR - Math.sin(this.guardMop.phase) * 2);
+    this.ventArt.forEach((vent, i) => {
+      const show = this.playStyle === 'chaos';
+      vent.plate.setVisible(show);
+      const state = this.steam.state(i);
+      vent.warning.setVisible(show && state === 'warning');
+      vent.hot.setVisible(show && state === 'hot');
+    });
     this.mopArt
       .setVisible(this.pantry.phase === 'cheese')
       .setAlpha(this.pantry.mopDisabled > 0 ? 0.4 : 1)
@@ -538,6 +613,10 @@ export class GameScene extends Phaser.Scene {
       escapeLeft: +p.escapeLeft.toFixed(1),
       mopHits: p.mopHits,
       mopX: Math.round(this.mop.x),
+      guardMopX: Math.round(this.guardMop.x),
+      chefHeat: +c.heat.toFixed(2),
+      steamHits: this.steam.hits,
+      vents: STEAM_VENTS.map((vent, i) => ({x: vent.x, state: this.steam.state(i)})),
       mopDisabled: +p.mopDisabled.toFixed(1),
       chefBlinded: +c.blinded.toFixed(1),
       complete: p.complete,
@@ -560,7 +639,7 @@ export class GameScene extends Phaser.Scene {
       p.gadgetsUsed.size * 200 + p.notebook.completed * 260 +
       this.rat.energy * 2 + Math.max(0, 180 - this.runTime) * 6 +
       (p.complete ? p.escapeLeft * 7 : 0) -
-      p.mopHits * 140 - p.squeaks * 20
+      p.mopHits * 140 - this.steam.hits * 135 - p.squeaks * 20
     ));
     return {
       points,
