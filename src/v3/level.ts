@@ -131,3 +131,11 @@ export function blocksSight(x1: number, y1: number, x2: number, y2: number) {
     )
   );
 }
+
+// A second mission opens after the three pastry deliveries. Each wedge
+// occupies a different route: floor distraction, tabletop and far-left aisle.
+export const cheeseCaches = [
+  { id: 'spoon', name: 'Spoon-side cheese', x: 2020, y: FLOOR },
+  { id: 'table', name: 'Tabletop cheese', x: 1415, y: 332 },
+  { id: 'aisle', name: 'Forgotten cheese', x: 235, y: FLOOR },
+] as const;
