@@ -52,6 +52,22 @@ export class Controls {
           }
         }
       };
+      // Sliding one thumb from ← to → (or back) steers immediately,
+      // without lifting and retapping. Pointer capture keeps the gesture
+      // attached to its original button; hit testing uses screen coordinates.
+      if (name === 'left' || name === 'right') {
+        button.onpointermove = (e) => {
+          const id = 'p' + e.pointerId;
+          const held = this.held.get(id);
+          if (!this.enabled || (held !== 'left' && held !== 'right')) return;
+          const underFinger = document.elementFromPoint(e.clientX, e.clientY);
+          const next = underFinger?.closest<HTMLElement>('[data-control]')?.dataset.control;
+          if ((next === 'left' || next === 'right') && next !== held) {
+            this.release(id);
+            this.press(id, next);
+          }
+        };
+      }
       button.onlostpointercapture = releasePointer;
     }
   }
