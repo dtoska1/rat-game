@@ -13,9 +13,21 @@ npm ci
 npm run dev
 ```
 
-## V3.4 — launch Chaos instantly
+## V3.5 — Hard Chaos difficulty
 
-The main title screen now has two conspicuous options: **⚡ Play NEW Chaos** starts directly with the roaming mop, sabotage switches, secret cheeses, Squeak ability, three randomized optional prank tasks and the timed finale. **Original story** keeps the original three pastry deliveries, after which the same bonus stage unlocks. A visible `V3.4 · NEW MODE` marker in the header and in-game ribbon make it obvious whether the new release loaded. Restarting the selected heist preserves its mode. The original V1/V2 illustrated kitchen background is unchanged.
+Select **⚡ Play HARD Chaos** to start a genuinely more demanding kitchen run without repeating the pastry missions. The Original Story and its existing bonus stage remain at their previous difficulty.
+
+- **Two moving mop bots:** the original mop is faster and a second coral-colored bot patrols the far aisle. Both gain speed as you steal cheese; the green MOP switch disables **both** for 9 seconds (15 seconds in Classic).
+- **Two timed steam vents:** grates at x=1680 and x=905 cycle every 9.5 seconds: 5.5 seconds clear, 1.5 seconds **amber warning**, then 2.5 seconds of **red hot steam**. Jump above the jet or hide in cover; crossing an active jet at floor level costs 13 energy and alerts the chef. Hazards pause when the game is paused.
+- **Chef fury:** sight, patrol and chase speeds rise with each collected cheese. The final dash adds another pressure increase.
+- **Fewer safety resources:** start at 65 energy, get 14 energy for each cheese instead of 18, PUFF blinds for 5 seconds instead of 8, and QUACK restores 20 energy instead of 30.
+- **38-second finale:** after three cheeses and two pranks, escape home within 38 seconds instead of 50.
+
+The HUD now tells you when steam is dangerous, and **skipped** pastries are no longer displayed as if they were earned. Hard Chaos scores exclude skipped pastry points and use separate medal thresholds, making high ranks meaningful. The V3.5 release label confirms the new build is loaded.
+
+## V3.4 — launch Chaos instantly (now Hard Chaos in V3.5)
+
+The main title screen now has two conspicuous options: **⚡ Play HARD Chaos** starts directly with the roaming mop, sabotage switches, secret cheeses, Squeak ability, three randomized optional prank tasks and the timed finale. **Original story** keeps the original three pastry deliveries, after which the same bonus stage unlocks. A visible `V3.4 · NEW MODE` marker in the header and in-game ribbon make it obvious whether the new release loaded. Restarting the selected heist preserves its mode. The original V1/V2 illustrated kitchen background is unchanged.
 
 ## The classic kitchen and the bonus mission
 

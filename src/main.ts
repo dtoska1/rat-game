@@ -116,7 +116,7 @@ function refresh() {
   }
   if (mode === 'play') {
     write(el('mode-ribbon'), scene.playStyle === 'chaos'
-      ? '⚡ CHAOS CHALLENGE · NEW FEATURES ACTIVE'
+      ? '⚡ HARD CHAOS · TWO MOPS + STEAM JETS'
       : 'CLASSIC STORY · CHAOS UNLOCKS AFTER 3 PASTRIES');
     const squeak = el<HTMLButtonElement>('squeak');
     const ready = pantry.squeakCooldown <= 0 && rat.energy >= 8 && rat.hidden !== 'Home';
@@ -125,7 +125,10 @@ function refresh() {
     const pct = Math.floor(rat.energy);
     write(energy, pct + '%');
     if (fill.style.width !== pct + '%') fill.style.width = pct + '%';
-    write(chefStatus, chefWords[chef.mode] + (pantry.phase === 'cheese' ? ' · ALERT' : ''));
+    write(chefStatus, chefWords[chef.mode] +
+      (scene.playStyle === 'chaos' ? ' · FURY ' +
+        (pantry.cheeseFound.size + 1) + '/4' :
+        pantry.phase === 'cheese' ? ' · ALERT' : ''));
     chefStatus.classList.toggle('danger', chef.mode === 'chase');
     const message =
       pantry.messageTime > 0
@@ -133,7 +136,10 @@ function refresh() {
         : pantry.phase === 'cheese'
           ? pantry.cheeseFound.size === 3 && pantry.gadgetsUsed.size >= 2
             ? 'All missions done · escape home →'
-            : 'Cheese ' + pantry.cheeseFound.size + '/3 · pranks ' + pantry.gadgetsUsed.size + '/2 · dodge the mop!'
+            : scene.playStyle === 'chaos'
+              ? 'HARD: cheese ' + pantry.cheeseFound.size + '/3 · switches ' +
+                pantry.gadgetsUsed.size + '/2 · dodge steam + TWO mops!'
+              : 'Cheese ' + pantry.cheeseFound.size + '/3 · pranks ' + pantry.gadgetsUsed.size + '/2 · dodge the mop!'
         : rat.hidden && rat.hidden !== 'Home'
           ? 'Hidden · ' + rat.hidden
           : rat.carried
@@ -186,7 +192,9 @@ function refresh() {
   clock.hidden = !pantry.escapeActive || mode !== 'play';
   if (pantry.escapeActive) write(clock, '⏰ Escape home: ' + Math.ceil(pantry.escapeLeft) + 's');
   write(el('best-score'), bestScore() ? 'Personal best: ' + bestScore().toLocaleString() : 'New: 3 random pranks each run');
-  write(stash, pantry.delivered.size + ' of 3 pastries');
+  write(stash, scene.playStyle === 'chaos'
+    ? 'Pastry missions skipped · Hard Chaos'
+    : pantry.delivered.size + ' of 3 pastries');
   write(
     el('short-stash'),
     pantry.phase === 'cheese'
@@ -199,14 +207,20 @@ function refresh() {
   el('bonus-hud').hidden = pantry.phase !== 'cheese' || mode !== 'play';
   write(el('bonus-cheese'), 'Cheese ' + pantry.cheeseFound.size + '/3');
   write(el('bonus-gadgets'), 'Pranks ' + pantry.gadgetsUsed.size + '/2');
-  write(el('bonus-mop'), pantry.mopDisabled > 0 ? 'Mop sleeping' : 'Jump the mop!');
+  write(el('bonus-mop'), pantry.mopDisabled > 0
+    ? scene.playStyle === 'chaos' ? 'Both mops sleeping!' : 'Mop sleeping'
+    : scene.playStyle === 'chaos' ? 'TWO mops: jump or switch off!' : 'Jump the mop!');
+  write(el('chaos-pressure'), scene.playStyle === 'chaos'
+    ? 'Steam: amber = warning, red = HOT!'
+    : 'Bonus mission');
   write(el('notebook-bonus'), 'Mischief ' + pantry.notebook.completed + '/3');
   loot.forEach((n) => {
     const done = pantry.delivered.has(
       n.dataset.loot as (typeof stations)[number]['kind']
     );
-    n.classList.toggle('stored', done);
-    write(n.querySelector('i')!, done ? '✓' : '○');
+    n.classList.toggle('stored', done && scene.playStyle !== 'chaos');
+    n.classList.toggle('skipped', scene.playStyle === 'chaos');
+    write(n.querySelector('i')!, scene.playStyle === 'chaos' ? '–' : done ? '✓' : '○');
   });
   if (scene.debug && mode === 'play') {
     debug.hidden = false;

@@ -37,6 +37,7 @@ type Choice = {
 };
 export class Pantry {
   notebook = new Notebook();
+  hardMode = false;
   delivered = new Set<Pastry>();
   phase: 'pastries' | 'cheese' = 'pastries';
   cheeseFound = new Set<string>();
@@ -149,7 +150,7 @@ export class Pantry {
         break;
       case 'collect':
         this.cheeseFound.add(c.cache!.id);
-        r.energy = Math.min(100, r.energy + 18);
+        r.energy = Math.min(100, r.energy + (this.hardMode ? 14 : 18));
         chef.distract(c.cache!.x);
         sound.play('take');
         this.tell(
@@ -163,17 +164,20 @@ export class Pantry {
         if (g.id === 'duck') this.notebook.stamp('duck');
         this.gadgetsUsed.add(g.id);
         if (g.id === 'breaker') {
-          this.mopDisabled = 15;
+          this.mopDisabled = this.hardMode ? 9 : 15;
           chef.distract(1180);
-          this.tell('CLICK! Mop bot is asleep for 15 seconds.');
+          this.tell(this.hardMode ? 'CLICK! Both bots sleep for 9 seconds.' :
+            'CLICK! Mop bot is asleep for 15 seconds.');
         } else if (g.id === 'flour') {
-          chef.blinded = 8;
+          chef.blinded = this.hardMode ? 5 : 8;
           chef.distract(2550);
-          this.tell('POOF! Chef cannot see through the flour for 8 seconds.');
+          this.tell(this.hardMode ? 'POOF! Chef is blinded for 5 seconds.' :
+            'POOF! Chef cannot see through the flour for 8 seconds.');
         } else {
           chef.distract(2550);
-          r.energy = Math.min(100, r.energy + 30);
-          this.tell('SQUEAK! Chef follows the duck. +30 energy!');
+          r.energy = Math.min(100, r.energy + (this.hardMode ? 20 : 30));
+          this.tell(this.hardMode ? 'SQUEAK! The duck lures him. +20 energy!' :
+            'SQUEAK! Chef follows the duck. +30 energy!');
         }
         sound.play('spoon');
         break;
