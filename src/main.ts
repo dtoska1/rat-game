@@ -68,7 +68,7 @@ function refresh() {
         lost
           ? 'The chef has baked you into his signature cake. At least the ears are flattering.'
           : won
-            ? 'Three pastries safely stashed. Somewhere, a French chef is counting to ten.'
+            ? 'Three pastries and three secret cheeses! The chef will never recover from this.'
             : 'Your rat will wait right here.'
       );
       write(
@@ -92,11 +92,15 @@ function refresh() {
     const pct = Math.floor(rat.energy);
     write(energy, pct + '%');
     if (fill.style.width !== pct + '%') fill.style.width = pct + '%';
-    write(chefStatus, chefWords[chef.mode]);
+    write(chefStatus, chefWords[chef.mode] + (pantry.phase === 'cheese' ? ' · ALERT' : ''));
     chefStatus.classList.toggle('danger', chef.mode === 'chase');
     const message =
       pantry.messageTime > 0
         ? pantry.message
+        : pantry.phase === 'cheese'
+          ? pantry.cheeseFound.size === 3
+            ? 'All cheese pocketed · get home →'
+            : 'Bonus cheese hunt · ' + pantry.cheeseFound.size + ' / 3 found'
         : rat.hidden && rat.hidden !== 'Home'
           ? 'Hidden · ' + rat.hidden
           : rat.carried
@@ -122,12 +126,21 @@ function refresh() {
       hide: 'Hide',
       clang: 'Clang',
       hungry: 'Action',
+      collect: 'Pocket',
+      finish: 'Win!',
       none: 'Action',
     };
     write(action, short[choice.action]);
   }
   write(stash, pantry.delivered.size + ' of 3 pastries');
-  write(el('short-stash'), 'Home stash ' + pantry.delivered.size + ' / 3');
+  write(
+    el('short-stash'),
+    pantry.phase === 'cheese'
+      ? 'Secret cheese ' + pantry.cheeseFound.size + ' / 3'
+      : 'Home stash ' + pantry.delivered.size + ' / 3'
+  );
+  el('cheese-mission').hidden = pantry.phase !== 'cheese' && mode !== 'won';
+  write(el('cheese-progress'), pantry.cheeseFound.size + ' / 3 found');
   loot.forEach((n) => {
     const done = pantry.delivered.has(
       n.dataset.loot as (typeof stations)[number]['kind']
