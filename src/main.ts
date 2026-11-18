@@ -57,9 +57,9 @@ const scene = new GameScene(controls, sound, refresh, openArtwork);
 type GalleryArtwork = 'drawing2' | 'sketch';
 const artwork = {
   drawing2: {
-    src: drawing2, title: 'Drawing 2 — featured original',
+    src: drawing2, title: 'k🫶🏼 — featured original',
     description: 'Your priority artwork: the cat, car, characters, sun, clouds and handwritten details, preserved from the actual PDF.',
-    source: 'Source: drawing 2.pdf', alt: 'Full original drawing 2',
+    source: 'k🫶🏼 · Original artwork', alt: 'Full original artwork k🫶🏼',
   },
   sketch: {
     src: kitchenSketch, title: 'Original Rat Game kitchen sketch',
