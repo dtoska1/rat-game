@@ -1102,3 +1102,170 @@ button {
   }
   .touch-game #chaos-pressure { font-size: 9px; }
 }
+
+/* V3.6 — showcase the user's ACTUAL PDF drawings, with drawing 2 featured.
+   Nothing here attempts to redraw or replace the hand-drawn lines. */
+.art-nav { background: #fff0cc; border-color: #a98564; }
+.title-art-link {
+  display: block;
+  width: 100%;
+  padding: 6px 8px;
+  margin: 5px 0 10px;
+  background: #fff8e8;
+  border: 1px dashed #a67b59;
+  border-radius: 7px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 700;
+  color: #76523e;
+}
+.title-art-link:hover { background: #ffe9c2; }
+.gallery-in-game {
+  position: absolute;
+  z-index: 12;
+  right: 10px;
+  bottom: 10px;
+  padding: 6px 9px;
+  border: 2px solid #956d55;
+  border-radius: 8px 6px 8px 7px;
+  background: #fff4dceb;
+  box-shadow: 2px 2px #533e3255;
+  font: 800 12px 'DM Sans', sans-serif;
+  color: #664b39;
+  pointer-events: auto;
+}
+.gallery-in-game:hover { background: #ffdeaa; }
+.original-art-showcase {
+  padding: 18px 20px;
+  margin-top: 16px;
+  background: #fff8e8;
+  border: 2px solid #a98c73;
+  border-radius: 13px;
+  box-shadow: 3px 3px 0 #6f554523;
+}
+.art-showcase-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 0 4px 10px;
+}
+.art-showcase-heading h2 {
+  font: 400 clamp(24px, 2.6vw, 35px) 'Young Serif', Georgia, serif;
+  letter-spacing: -.03em;
+  margin: 3px 0;
+}
+.art-showcase-heading p { max-width: 40ch; font-size: 13px; margin: 0 0 5px; color: #756253; }
+.original-art-grid { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); gap: 16px; }
+.original-art-card {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  align-items: center;
+  border-radius: 9px;
+  background: #fffcf4;
+  border: 1.5px solid #aa907b;
+  padding: 14px;
+  text-align: center;
+  font-weight: 700;
+  min-width: 0;
+  box-shadow: 2px 3px 0 #8d70552c;
+}
+.original-art-card:hover { background: #fff0da; transform: translateY(-1px); }
+.featured-art-card { border: 3px solid #d19874; background: #fff4df; }
+.art-card-title { font: 400 clamp(19px, 2vw, 24px) 'Young Serif', Georgia, serif; color: #6f3c2f; }
+.art-card-foot { font-size: 12px; color: #795b4b; }
+.original-art-card img {
+  display: block;
+  object-fit: contain;
+  width: 100%;
+  background: white;
+  border: 1px solid #e5dcd1;
+  border-radius: 4px;
+  padding: 10px;
+}
+.featured-art-card img { max-width: 440px; max-height: 470px; }
+.secondary-art-card img { max-width: 385px; max-height: 350px; }
+#art-gallery {
+  position: fixed;
+  max-width: min(900px, calc(100vw - 26px));
+  width: min(900px, 95vw);
+  max-height: min(95dvh, 980px);
+  margin: auto;
+  padding: 0;
+  border: 3px solid #805d48;
+  border-radius: 12px 10px 13px 10px;
+  background: #fff7e8;
+  color: #3e302e;
+  overflow-y: auto;
+  box-shadow: 8px 10px 0 #513b3366;
+}
+#art-gallery::backdrop { background: #241b19ba; }
+.art-gallery-paper { position: relative; padding: 18px clamp(13px, 3vw, 26px) 22px; text-align: center; }
+.art-gallery-paper > .eyebrow { display: block; text-align: left; }
+.art-gallery-paper h2 {
+  font: 400 clamp(22px, 4vw, 34px) 'Young Serif', Georgia, serif;
+  margin: 8px 28px 6px;
+  letter-spacing: -.04em;
+}
+.art-gallery-paper p { max-width: 66ch; margin: 6px auto 12px; font-size: 13px; line-height: 1.35; }
+.art-gallery-switch { display: flex; gap: 7px; justify-content: center; margin-bottom: 10px; }
+.art-gallery-switch button {
+  background: #fff5db;
+  border: 1.5px solid #a88f78;
+  padding: 8px 13px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 800;
+}
+.art-gallery-switch button.selected { background: #efc3a6; border-color: #8c5541; }
+.art-gallery-sheet {
+  background: #ffffff;
+  border: 2px solid #d7bda4;
+  border-radius: 4px;
+  padding: 8px;
+  display: grid;
+  place-items: center;
+  max-height: 60dvh;
+  overflow: auto;
+}
+.art-gallery-sheet img {
+  display: block;
+  width: auto;
+  height: auto;
+  max-height: 55dvh;
+  max-width: min(100%, 720px);
+  object-fit: contain;
+}
+.art-gallery-source { font-weight: 800; color: #6c4e3b; }
+#gallery-close { position: sticky; float: right; top: 0; z-index: 10; background: #fff1de; border: 1px solid #a98c73; border-radius: 50%; width: 34px; height: 34px; }
+@media (max-width: 650px) {
+  .mast { gap: 5px; }
+  .brand { gap: 5px; font-size: 20px; letter-spacing: -1px; }
+  .brand img { height: 31px; }
+  .brand .release-stamp { display: none; }
+  nav { gap: 4px; }
+  nav button { padding: 6px 7px; font-size: 10px; }
+  nav span { font-size: 12px; }
+  .title-art-link { margin: 3px 0; padding: 4px 6px; font-size: 10px; }
+  .original-art-showcase { padding: 12px; }
+  .art-showcase-heading { display: block; }
+  .art-showcase-heading p { margin-top: 6px; }
+  .original-art-grid { grid-template-columns: 1fr; }
+  .original-art-card { padding: 9px; }
+  .art-gallery-sheet { max-height: 59dvh; }
+  .art-gallery-sheet img { max-height: 52dvh; }
+}
+@media (orientation: landscape) and (max-height: 600px) {
+  .touch-game .original-art-showcase { display: none; }
+  .touch-game .gallery-in-game { right: max(10px, calc(env(safe-area-inset-right) + 6px)); bottom: 8px; font-size: 11px; padding: 5px 8px; }
+  .touch-game #art-gallery { max-height: 97dvh; }
+  .touch-game .art-gallery-paper { padding: 6px 14px 12px; }
+  .touch-game .art-gallery-paper h2 { font-size: 18px; margin: 2px 28px 3px; }
+  .touch-game .art-gallery-paper p { font-size: 11px; margin: 3px auto 6px; }
+  .touch-game .art-gallery-switch { margin: 3px 0; }
+  .touch-game .art-gallery-switch button { font-size: 11px; padding: 5px 9px; }
+  .touch-game .art-gallery-sheet { max-height: 52dvh; }
+  .touch-game .art-gallery-sheet img { max-height: 47dvh; }
+  .touch-game .title-art-link { font-size: 10px; padding: 3px 5px; margin: 3px 0; }
+}
