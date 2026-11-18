@@ -69,7 +69,9 @@ export const pastryX = (s: Station) => s.x - 84;
 export const STOOL_Y = FLOOR - 82;
 export function ladderAt(x: number, y: number) {
   return stations.find(
-    (s) => Math.abs(x - rack(s)) < 50 && y > s.top + 0.1 && y <= STOOL_Y + 28
+    (s) => // Jump on the stool should find its ladder without precision steering,
+    // especially with a thumb on landscape phones.
+    Math.abs(x - rack(s)) < 104 && y > s.top + 0.1 && y <= STOOL_Y + 28
   );
 }
 export interface Slab {
