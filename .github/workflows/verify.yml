@@ -30,6 +30,8 @@ jobs:
           exit 1
       - name: Verify new mischief features on a mobile layout
         run: npm run test:features
+      - name: Verify touch-target sizes before full kitchen playthrough
+        run: npm run test:layout
       - name: Play the kitchen with keyboard and touch
         run: npm run test:game
       - name: Check touch jumping and rotation in WebKit
