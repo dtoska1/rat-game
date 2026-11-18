@@ -10,6 +10,7 @@ const patrol = [920, 2180, 1290, 2800, 480];
 export class Chef {
   x = 1040;
   heat = 0; // The secret-cheese round is a faster second shift.
+  blinded = 0; // Flour cloud gives a genuine stealth window.
   facing = -1;
   mode: ChefMode = 'patrol';
   alert = 0;
@@ -48,8 +49,10 @@ export class Chef {
     const dx = r.x - this.x,
       distance = Math.abs(dx);
     this.lock = Math.max(0, this.lock - dt);
+    this.blinded = Math.max(0, this.blinded - dt);
     this.recovery = Math.max(0, this.recovery - dt);
     this.seen =
+      this.blinded <= 0 &&
       !r.hidden &&
       r.x < HOME - 100 &&
       (dx * this.facing > 0 || distance < 55) &&
