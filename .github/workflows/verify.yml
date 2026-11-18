@@ -17,7 +17,11 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
-      - run: npx playwright install --with-deps chromium webkit
+      # The GitHub-hosted Noble image already carries the browser system libs.
+      # --with-deps can hang in apt and prevents even the gameplay tests starting.
+      - name: Install Playwright browsers
+        run: npx playwright install chromium webkit
+        timeout-minutes: 4
       - name: Start the local preview
         run: |
           npm run preview -- --port 4318 --strictPort > /tmp/rat-preview.log 2>&1 &
