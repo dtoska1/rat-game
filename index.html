@@ -12,13 +12,13 @@
       content="One round rat, three stolen pastries, a hidden-cheese bonus mission and a very upset French chef."
     />
     <link rel="icon" href="./src/v3/art/rat-idle.webp" />
-    <title>Rat Game · The Great Pastry Heist</title>
+    <title>Rat Game V3.4 · Chaos Mode Available</title>
   </head>
   <body>
     <main class="book">
       <header class="mast">
         <div class="brand">
-          <img src="./src/v3/art/rat-idle.webp" alt="" /><span>Rat Game</span>
+          <img src="./src/v3/art/rat-idle.webp" alt="" /><span>Rat Game</span><span class="release-stamp">V3.4 · NEW MODE</span>
         </div>
         <nav aria-label="Game settings">
           <button id="guide-open">
@@ -41,15 +41,17 @@
             /><img class="hero-loot" src="./src/v3/art/eclair.webp" alt="" />
           </div>
           <div class="title-paper">
-            <span class="eyebrow"><i></i> The kitchen caper</span>
+            <span class="eyebrow"><i></i> The kitchen caper · V3.4</span>
             <h1>The Great<br /><em>Pastry Heist</em></h1>
             <p>
               Steal pastries, cause kitchen chaos, and outrun the chef's alarm. New prank challenges every run!
             </p>
+            <p class="new-mode-copy"><strong>NEW!</strong> Play the mop robot, cheese hunt and chef pranks instantly.</p>
             <p class="best-score" id="best-score">New: 3 random pranks each run</p>
-            <button class="primary" id="start" disabled>
-              Opening kitchen…
-            </button>
+            <div class="mode-picks">
+              <button class="primary chaos-play" id="start-chaos" disabled>⚡ Play NEW Chaos</button>
+              <button class="secondary-play" id="start" disabled>Original story →</button>
+            </div>
           </div>
         </div>
         <div id="hud" hidden>
@@ -60,6 +62,7 @@
           </div>
           <button id="pause" aria-label="Pause game">Ⅱ</button>
           <div class="chef-status" id="chef-status"></div>
+          <div class="mode-ribbon" id="mode-ribbon">CLASSIC HEIST</div>
           <div class="notice" id="notice"></div>
           <div class="notebook-compact" id="notebook-compact">To-do 0/3</div>
           <div id="bonus-hud" class="bonus-hud" hidden>
@@ -151,6 +154,7 @@
           until your belly is full. Take the whole pastry on the other plate.
           Come back to the hole on the right and use Action to stash it.
         </p>
+        <p><b>Two ways to play.</b> Choose <strong>Play NEW Chaos</strong> on the title screen to start with the mop bot, prank switches and cheese chase immediately. Choose <strong>Original story</strong> to play all three pastry deliveries first and then unlock the chaos round.</p>
         <p>
           <b>Secret cheese round.</b> After stashing all three pastries,
           discover three vintage cheese wedges: one near the spoon, one on a
