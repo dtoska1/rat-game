@@ -32,6 +32,8 @@ jobs:
       # never let an unrelated offline bundling failure block hosted gameplay.
       - name: Check scrolling camera, resize debouncing and low-GPU fallback
         run: node tests/v3-mobile-fluid.mjs
+      - name: Verify camera center and scrolling smoothness on desktop/phones
+        run: node tests/v3-camera-pacing.mjs
       - name: Verify both original PDF drawings in gameplay and gallery
         run: node tests/v3-original-art.mjs
       - name: Check instant Chaos launch and classic story on desktop/iPhone
