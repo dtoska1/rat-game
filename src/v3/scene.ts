@@ -34,6 +34,7 @@ export class GameScene extends Phaser.Scene {
   pantry = new Pantry();
   mop = new MopBot();
   mode: Mode = 'title';
+  failureReason: 'chef' | 'alarm' = 'chef';
   visibleHeight = HEIGHT;
   private ratArt!: Phaser.GameObjects.Image;
   private chefArt!: Phaser.GameObjects.Image;
@@ -215,6 +216,7 @@ export class GameScene extends Phaser.Scene {
     this.accumulator = 0;
     this.runTime = 0;
     this.endTime = 0;
+    this.failureReason = 'chef';
     this.samples = [];
     this.controls.clear();
     this.controls.enabled = true;
@@ -283,6 +285,7 @@ export class GameScene extends Phaser.Scene {
     p.clang = Math.max(0, p.clang - dt);
     p.messageTime = Math.max(0, p.messageTime - dt);
     p.mopDisabled = Math.max(0, p.mopDisabled - dt);
+    p.squeakCooldown = Math.max(0, p.squeakCooldown - dt);
     const chefMode = this.chef.mode;
     const vy = r.vy,
       boost = r.boosting;
@@ -290,15 +293,30 @@ export class GameScene extends Phaser.Scene {
     if (vy >= 0 && r.vy < -280) this.sfx.play('jump');
     if (!boost && r.boosting) this.sfx.play('boost');
     if (this.controls.take('act')) p.use(r, this.chef, this.sfx);
+    if (this.controls.take('squeak')) p.squeak(r, this.chef, this.sfx);
     if (this.mop.update(dt, r, p.phase === 'cheese', p.mopDisabled > 0)) {
+      p.mopHits++;
       this.chef.distract(this.mop.x);
       p.tell('BONK! Jump over the mop bot or switch it off. −16 energy');
       this.sfx.play('spoon');
     }
-    this.chef.heat = p.phase === 'cheese' ? 1 : 0;
+    if (p.phase === 'cheese' && r.y < FLOOR - 65 && Math.abs(r.x - this.mop.x) < 92 && p.mopDisabled <= 0)
+      p.notebook.stamp('mop');
+    if (r.hidden === 'Teapot' && Math.abs(this.chef.x - 1830) < 220)
+      p.notebook.stamp('teapot');
+    if (p.startEscape()) this.sfx.play('spoon');
+    if (p.escapeActive && !p.complete) {
+      p.escapeLeft = Math.max(0, p.escapeLeft - dt);
+      if (p.escapeLeft === 0) {
+        this.failureReason = 'alarm';
+        this.mode = 'lost';
+        this.sfx.play('caught');
+      }
+    }
+    this.chef.heat = p.phase === 'cheese' ? (p.escapeActive ? 1.25 : 1) : 0;
     if (p.complete) {
       this.mode = 'won';
-    } else if (this.chef.update(dt, r)) {
+    } else if (this.mode === 'play' && this.chef.update(dt, r)) {
       this.mode = 'caught';
       this.sfx.play('caught');
     }
@@ -501,10 +519,17 @@ export class GameScene extends Phaser.Scene {
       phase: p.phase,
       cheese: [...p.cheeseFound],
       pranks: [...p.gadgetsUsed],
+      notebook: p.notebook.tasks.map((task) => ({ id: task.id, done: p.notebook.done.has(task.id) })),
+      squeakCooldown: +p.squeakCooldown.toFixed(1),
+      escapeActive: p.escapeActive,
+      escapeLeft: +p.escapeLeft.toFixed(1),
+      mopHits: p.mopHits,
       mopX: Math.round(this.mop.x),
       mopDisabled: +p.mopDisabled.toFixed(1),
       chefBlinded: +c.blinded.toFixed(1),
       complete: p.complete,
+      score: this.score().points,
+      failureReason: this.failureReason,
       action: p.choose(r).action,
       chef: c.mode,
       chefX: Math.round(c.x),
@@ -513,6 +538,22 @@ export class GameScene extends Phaser.Scene {
       alert: Math.round(c.alert * 100),
       held: this.controls.names(),
       last: p.last,
+    };
+  }
+  score() {
+    const p = this.pantry;
+    const points = Math.max(0, Math.round(
+      p.delivered.size * 600 + p.cheeseFound.size * 350 +
+      p.gadgetsUsed.size * 200 + p.notebook.completed * 260 +
+      this.rat.energy * 2 + Math.max(0, 180 - this.runTime) * 6 +
+      (p.complete ? p.escapeLeft * 7 : 0) -
+      p.mopHits * 140 - p.squeaks * 20
+    ));
+    return {
+      points,
+      rank: points >= 4400 ? 'GOLD' : points >= 3700 ? 'SILVER' : 'BRONZE',
+      duration: Math.round(this.runTime),
+      challenges: p.notebook.completed,
     };
   }
   timing() {
