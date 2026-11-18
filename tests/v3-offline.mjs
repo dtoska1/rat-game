@@ -11,10 +11,8 @@ try {
   });
   const p = await ctx.newPage(),
     requests = [],
-    errors = [],
-    consoleErrors = [];
+    errors = [];
   p.on('pageerror', (e) => errors.push(String(e)));
-  p.on('console', (m) => { if (m.type() === 'error') consoleErrors.push(m.text()); });
   p.on('request', (r) => {
     if (/^https?:/.test(r.url())) requests.push(r.url());
   });
@@ -22,24 +20,7 @@ try {
   await p.goto(
     pathToFileURL(resolve('preview/Rat Game V3.html')).href + '?debug'
   );
-  try {
-    await p.locator('#start:enabled').click({ timeout: 16000 });
-  } catch (e) {
-    console.error('OFFLINE STARTUP DIAGNOSTICS', JSON.stringify({
-      file: p.url(),
-      pageErrors: errors,
-      consoleErrors,
-      requestFailures: requests,
-      dom: await p.evaluate(() => ({
-        readyState: document.readyState,
-        buttonPresent: !!document.querySelector('#start'),
-        buttonDisabled: document.querySelector('#start')?.disabled,
-        canvasCount: document.querySelectorAll('#world canvas').length,
-        stageMode: document.querySelector('#stage')?.dataset.mode,
-      })),
-    }, null, 2));
-    throw e;
-  }
+  await p.locator('#start:enabled').click();
   await p.keyboard.down('ArrowLeft');
   await p.waitForFunction(() => window.ratPlaytest.read().x < 3000);
   await p.keyboard.up('ArrowLeft');
