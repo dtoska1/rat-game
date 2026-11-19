@@ -28,7 +28,9 @@ for (const view of ['promax', 'landscape']) {
         const s = window.ratPlaytest.read();
         if (prev) rows.push({ dt: t - prev, camera: s.cameraX, x: s.x });
         prev = t;
-        // Headless software GPUs may render far fewer frames than real phones.\n        // The test checks camera continuity, not a universal FPS target.\n        if (t - began < 1300) requestAnimationFrame(step);
+        // Headless software GPUs may render far fewer frames than real phones.
+        // The test checks camera continuity, not a universal FPS target.
+        if (t - began < 1300) requestAnimationFrame(step);
         else resolve(rows);
       };
       requestAnimationFrame(step);
