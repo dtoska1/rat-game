@@ -52,22 +52,22 @@ swapHands.onclick = () => {
   try { localStorage.setItem(SWAPPED_HANDS_KEY, swappedHands ? 'yes' : 'no'); }
   catch { /* The preference still works until reload. */ }
 };
-// On phones, game controls are accessible in both upright and 180° portrait.
-// The browser may decline to rotate its UI upside down on some iPhones; when
-// the viewport remains portrait there is no restriction on either end up.
-// Our Playwright harness explicitly opts out when exercising legacy landscape
-// regressions; no production URL or user setting bypasses this mobile gate.
-const testWindow = window as Window & { __ratPlaytestAllowLandscape?: boolean };
-const portraitGate = el('portrait-gate');
-const sidewaysPhone = () =>
+// Phone gameplay requires landscape (either landscape orientation).
+// Browsers generally cannot force device rotation; show a clear rotation
+// screen in portrait. Rotation pauses and resumes without restarting the run.
+// Automated legacy portrait viewport tests may bypass this gate via an
+// injected, non-public pre-navigation flag.
+const testWindow = window as Window & { __ratPlaytestBypassOrientationGate?: boolean };
+const landscapeGate = el('landscape-gate');
+const uprightPhone = () =>
   hasTouchControls() &&
-  window.innerWidth > window.innerHeight &&
-  testWindow.__ratPlaytestAllowLandscape !== true;
+  window.innerHeight >= window.innerWidth &&
+  testWindow.__ratPlaytestBypassOrientationGate !== true;
 let pausedByRotation = false;
-function syncPortraitGate() {
-  const blocked = sidewaysPhone();
-  portraitGate.hidden = !blocked;
-  document.documentElement.classList.toggle('portrait-blocked', blocked);
+function syncLandscapeGate() {
+  const blocked = uprightPhone();
+  landscapeGate.hidden = !blocked;
+  document.documentElement.classList.toggle('landscape-blocked', blocked);
   if (blocked) {
     controls.clear();
     if (scene.mode === 'play') {
@@ -424,30 +424,30 @@ new ResizeObserver(scheduleFit).observe(stage);
 window.addEventListener('resize', scheduleFit, { passive: true });
 window.visualViewport?.addEventListener('resize', scheduleFit, { passive: true });
 // React to both phone rotations, including the return from landscape.
-window.addEventListener('resize', syncPortraitGate, { passive: true });
-window.addEventListener('orientationchange', syncPortraitGate, { passive: true });
-window.visualViewport?.addEventListener('resize', syncPortraitGate, { passive: true });
+window.addEventListener('resize', syncLandscapeGate, { passive: true });
+window.addEventListener('orientationchange', syncLandscapeGate, { passive: true });
+window.visualViewport?.addEventListener('resize', syncLandscapeGate, { passive: true });
 game.events.once(Phaser.Core.Events.READY, fit);
 touch.addEventListener('change', () => {
   document.documentElement.classList.toggle('touch-game', hasTouchControls());
   thumbs.hidden = !hasTouchControls() || scene.mode !== 'play';
   scheduleFit();
-  syncPortraitGate();
+  syncLandscapeGate();
 });
-syncPortraitGate();
+syncLandscapeGate();
 // Starting/pausing changes whether the touch deck and mast are visible.
 // Those deliberate layout changes need a synchronous re-fit; only incidental
 // Safari browser-chrome resizes are debounced.
-start.onclick = () => { if (sidewaysPhone()) return; scene.start('classic'); fit(); };
-chaosStart.onclick = () => { if (sidewaysPhone()) return; scene.start('chaos'); fit(); };
+start.onclick = () => { if (uprightPhone()) return; scene.start('classic'); fit(); };
+chaosStart.onclick = () => { if (uprightPhone()) return; scene.start('chaos'); fit(); };
 el('pause').onclick = () => { scene.pause(); fit(); };
 el('end-action').onclick = () => {
-  if (sidewaysPhone()) return;
+  if (uprightPhone()) return;
   if (scene.mode === 'pause') scene.pause();
   else scene.start(scene.playStyle);
   fit();
 };
-el('restart').onclick = () => { if (sidewaysPhone()) return; scene.start(scene.playStyle); fit(); };
+el('restart').onclick = () => { if (uprightPhone()) return; scene.start(scene.playStyle); fit(); };
 function soundLabel() {
   write(el('sound'), sound.muted ? '♪  Sound off' : '♫  Sound on');
   el('sound').setAttribute('aria-pressed', String(!sound.muted));
