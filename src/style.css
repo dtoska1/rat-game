@@ -1352,3 +1352,53 @@ button {
 @media (prefers-reduced-motion: reduce) {
   #thumbs [data-control] { transition: none; }
 }
+
+
+/* Portrait-only phone gameplay; desktop and non-touch screens are unaffected. */
+html.portrait-blocked,
+html.portrait-blocked body {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+#portrait-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  display: grid;
+  place-items: center;
+  padding: max(20px, env(safe-area-inset-top))
+    max(28px, env(safe-area-inset-right))
+    max(20px, env(safe-area-inset-bottom))
+    max(28px, env(safe-area-inset-left));
+  background: #f9eacb;
+  color: var(--ink);
+  text-align: center;
+  touch-action: none;
+}
+.portrait-gate-card {
+  width: min(480px, 100%);
+  padding: 18px 25px;
+  border: 3px solid var(--ink);
+  border-radius: 22px 15px 25px 18px;
+  background: var(--paper);
+  box-shadow: 6px 7px 0 #876a54;
+  transform: rotate(-1deg);
+}
+.portrait-gate-phone {
+  display: block;
+  font: 800 52px 'DM Sans', sans-serif;
+  color: #9b5347;
+}
+.portrait-gate-card strong {
+  display: block;
+  font: 400 clamp(23px, 4vw, 34px) 'Young Serif', Georgia, serif;
+}
+.portrait-gate-card p {
+  margin: 8px 0;
+  font-size: clamp(13px, 2.2vw, 16px);
+  line-height: 1.4;
+}
+.portrait-gate-card small {
+  font-weight: 700;
+  color: #70594c;
+}

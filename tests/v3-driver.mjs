@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 export const out = process.env.TEST_OUT || '.playtest';
 export const url = process.env.TARGET_URL || 'http://127.0.0.1:4318/';
-export async function openGame(view = 'desktop', engine = chromium) {
+export async function openGame(view = 'desktop', engine = chromium, options = {}) {
   await mkdir(out, { recursive: true });
   const browser = await engine.launch({
     headless: true,
@@ -23,6 +23,14 @@ export async function openGame(view = 'desktop', engine = chromium) {
     isMobile: view !== 'desktop',
     deviceScaleFactor: view === 'promax' ? 3 : 1,
   });
+  // Existing camera and landscape playthrough regressions must continue
+  // exercising their historical viewports. The portrait gate is tested
+  // separately with enforcePortrait: true in v3-portrait-gate.mjs.
+  if (!options.enforcePortrait) {
+    await context.addInitScript(() => {
+      window.__ratPlaytestAllowLandscape = true;
+    });
+  }
   const page = await context.newPage(),
     errors = [];
   page.on('pageerror', (e) => errors.push(String(e)));

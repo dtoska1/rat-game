@@ -40,6 +40,8 @@ jobs:
         run: node tests/v3-chaos-start.mjs
       - name: Verify new mischief features on a mobile layout
         run: npm run test:features
+      - name: Verify portrait-only mobile play and safe rotation pause
+        run: node tests/v3-portrait-gate.mjs
       - name: Verify touch-target sizes before full kitchen playthrough
         run: npm run test:layout
       - name: Play the kitchen with keyboard and touch
