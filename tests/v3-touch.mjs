@@ -121,6 +121,20 @@ try {
     'touch tap lands on the stool'
   );
   await record('quick Jump tap from directly below');
+
+  // Real touch steering can leave the rat on the right side of the stool.
+  // This must still count as aligned with its ladder after a released Jump.
+  await walk(2684);
+  const stoolEdge = await g.read();
+  assert.equal(stoolEdge.y, 448, 'rat remains on the stool');
+  assert.ok(stoolEdge.x > 2679 && stoolEdge.x <= 2712,
+    'rat is on the stool beyond the former narrow ladder threshold');
+  await hold('jump');
+  await g.wait((s) => s.y < 448, 'edge-of-stool Jump starts a climb');
+  await stop();
+  await g.wait((s) => s.y === 371 && !s.held.includes('jump'),
+    'released Jump finishes climbing from the right stool edge');
+  await record('right edge of stool climbs with one Jump tap');
   await g.reset();
   await walk(2792, true);
   const boosted = await record('boost drains energy');
