@@ -29,6 +29,14 @@ npm run build
 npm run preview -- --port 4318 --strictPort
 ```
 
+## Play offline
+
+The self-contained HTML is built and browser-tested with networking disabled.
+On GitHub, open [Standalone offline game](https://github.com/dtoska1/rat-game/actions/workflows/offline.yml), choose a **successful** run on `main`, and download the `rat-game-offline-html` artifact. Extract the ZIP and open `Rat Game V3.html` in a desktop browser.
+
+To create your own copy, run `npm run build:offline` and then
+`node tests/v3-offline.mjs` (Chromium required). The older files under `preview/phone/` and the historical preview ZIP are **not** the current release.
+
 ## Automated tests
 
 With the preview server running at `http://127.0.0.1:4318/`, in another terminal:
