@@ -496,6 +496,10 @@ if (scene.debug) {
       timing: () => scene.timing(),
       renderer: () =>
         game.renderer.type === Phaser.WEBGL ? 'WebGL' : 'Canvas',
+      originalArtworkLoaded: () => ({
+        drawing: game.textures.exists('original-drawing2'),
+        sketch: game.textures.exists('original-kitchen-sketch'),
+      }),
     }),
   });
 }

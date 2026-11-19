@@ -29,6 +29,19 @@ import { Pantry } from './interactions';
 import { Controls } from './controls';
 import { Sound } from './sound';
 
+// The hosted build supplies normal SVG asset URLs. The self-contained Vite
+// build may inline them as percent-encoded data: URLs; Phaser's SVG loader
+// expects base64 for data: images. Normalize only that case, preserving the
+// original vector artwork and the normal network build.
+function phaserSvgUrl(url: string): string {
+  if (!/^data:image\/svg\+xml(?:;charset=[^,;]+)?,/i.test(url)) return url;
+  const data = decodeURIComponent(url.slice(url.indexOf(',') + 1));
+  const bytes = new TextEncoder().encode(data);
+  let binary = '';
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return 'data:image/svg+xml;base64,' + btoa(binary);
+}
+
 export type Mode = 'title' | 'play' | 'pause' | 'caught' | 'lost' | 'won';
 export class GameScene extends Phaser.Scene {
   rat = new Rat();
@@ -87,8 +100,8 @@ export class GameScene extends Phaser.Scene {
   }
   preload() {
     this.load.image('wall', wallUrl);
-    this.load.svg('original-drawing2', drawing2Url);
-    this.load.svg('original-kitchen-sketch', kitchenSketchUrl);
+    this.load.svg('original-drawing2', phaserSvgUrl(drawing2Url));
+    this.load.svg('original-kitchen-sketch', phaserSvgUrl(kitchenSketchUrl));
     this.load.image('vintage-cheese', cheeseUrl);
     this.load.atlas('ink', atlasUrl, atlasData);
   }

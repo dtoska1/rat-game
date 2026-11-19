@@ -20,6 +20,19 @@ try {
   await p.goto(
     pathToFileURL(resolve('preview/Rat Game V3.html')).href + '?debug'
   );
+  const art = await p.evaluate(() => window.ratPlaytest.originalArtworkLoaded());
+  assert.deepEqual(art, { drawing: true, sketch: true },
+    'both original SVG drawings become usable Phaser textures offline');
+
+  await p.locator('#gallery-open').click();
+  await p.locator('#art-gallery').waitFor({ state: 'visible' });
+  assert.ok(await p.locator('#gallery-image').evaluate((img) => img.complete && img.naturalWidth > 0),
+    'featured original drawing opens offline');
+  await p.locator('#select-sketch').click();
+  await p.waitForFunction(() => document.querySelector('#gallery-image').complete &&
+    document.querySelector('#gallery-image').naturalWidth > 0);
+  await p.locator('#gallery-done').click();
+
   await p.locator('#start:enabled').click();
   await p.keyboard.down('ArrowLeft');
   await p.waitForFunction(() => window.ratPlaytest.read().x < 3000);
@@ -38,6 +51,8 @@ try {
         networkOffline: true,
         walked: true,
         jumped: true,
+        originalArtworkLoaded: art,
+        galleryOpened: true,
         externalRequests: requests,
         errors,
       },
