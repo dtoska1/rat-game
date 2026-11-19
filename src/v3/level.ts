@@ -76,7 +76,7 @@ export function ladderAt(x: number, y: number) {
     // on the stool's right side even though they were on valid platform art.
     (Math.abs(x - rack(s)) < 104 ||
       (y >= STOOL_Y - 10 &&
-        x >= stool(s) - 71 && x <= stool(s) + 71)) &&
+        x >= stool(s) - 84 && x <= stool(s) + 84)) &&
     y > s.top + 0.1 && y <= STOOL_Y + 28
   );
 }
