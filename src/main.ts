@@ -52,6 +52,33 @@ swapHands.onclick = () => {
   try { localStorage.setItem(SWAPPED_HANDS_KEY, swappedHands ? 'yes' : 'no'); }
   catch { /* The preference still works until reload. */ }
 };
+// On phones, game controls are accessible in both upright and 180° portrait.
+// The browser may decline to rotate its UI upside down on some iPhones; when
+// the viewport remains portrait there is no restriction on either end up.
+// Our Playwright harness explicitly opts out when exercising legacy landscape
+// regressions; no production URL or user setting bypasses this mobile gate.
+const testWindow = window as Window & { __ratPlaytestAllowLandscape?: boolean };
+const portraitGate = el('portrait-gate');
+const sidewaysPhone = () =>
+  hasTouchControls() &&
+  window.innerWidth > window.innerHeight &&
+  testWindow.__ratPlaytestAllowLandscape !== true;
+let pausedByRotation = false;
+function syncPortraitGate() {
+  const blocked = sidewaysPhone();
+  portraitGate.hidden = !blocked;
+  document.documentElement.classList.toggle('portrait-blocked', blocked);
+  if (blocked) {
+    controls.clear();
+    if (scene.mode === 'play') {
+      pausedByRotation = true;
+      scene.pause();
+    }
+  } else if (pausedByRotation) {
+    pausedByRotation = false;
+    if (scene.mode === 'pause') scene.pause();
+  }
+}
 const loot = Array.from(document.querySelectorAll<HTMLElement>('[data-loot]'));
 const BEST_SCORE_KEY = 'rat-game-v3-best-score';
 function bestScore(): number {
@@ -396,24 +423,31 @@ const scheduleFit = () => {
 new ResizeObserver(scheduleFit).observe(stage);
 window.addEventListener('resize', scheduleFit, { passive: true });
 window.visualViewport?.addEventListener('resize', scheduleFit, { passive: true });
+// React to both phone rotations, including the return from landscape.
+window.addEventListener('resize', syncPortraitGate, { passive: true });
+window.addEventListener('orientationchange', syncPortraitGate, { passive: true });
+window.visualViewport?.addEventListener('resize', syncPortraitGate, { passive: true });
 game.events.once(Phaser.Core.Events.READY, fit);
 touch.addEventListener('change', () => {
   document.documentElement.classList.toggle('touch-game', hasTouchControls());
   thumbs.hidden = !hasTouchControls() || scene.mode !== 'play';
   scheduleFit();
+  syncPortraitGate();
 });
+syncPortraitGate();
 // Starting/pausing changes whether the touch deck and mast are visible.
 // Those deliberate layout changes need a synchronous re-fit; only incidental
 // Safari browser-chrome resizes are debounced.
-start.onclick = () => { scene.start('classic'); fit(); };
-chaosStart.onclick = () => { scene.start('chaos'); fit(); };
+start.onclick = () => { if (sidewaysPhone()) return; scene.start('classic'); fit(); };
+chaosStart.onclick = () => { if (sidewaysPhone()) return; scene.start('chaos'); fit(); };
 el('pause').onclick = () => { scene.pause(); fit(); };
 el('end-action').onclick = () => {
+  if (sidewaysPhone()) return;
   if (scene.mode === 'pause') scene.pause();
   else scene.start(scene.playStyle);
   fit();
 };
-el('restart').onclick = () => { scene.start(scene.playStyle); fit(); };
+el('restart').onclick = () => { if (sidewaysPhone()) return; scene.start(scene.playStyle); fit(); };
 function soundLabel() {
   write(el('sound'), sound.muted ? '♪  Sound off' : '♫  Sound on');
   el('sound').setAttribute('aria-pressed', String(!sound.muted));
