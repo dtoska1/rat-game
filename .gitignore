@@ -1,9 +1,19 @@
+# Dependencies and build output
 node_modules/
 dist/
+.playtest/
+playwright-report/
+test-results/
+coverage/
+*.tsbuildinfo
+
+# Generated local previews (historical tracked snapshots remain in Git)
+preview/*.html
+preview/phone/
+
+# Local machine / editor output
 .DS_Store
 *.log
 .env
 .env.*
 !.env.example
-.playtest/
-preview/*.html
