@@ -71,7 +71,13 @@ export function ladderAt(x: number, y: number) {
   return stations.find(
     (s) => // Jump on the stool should find its ladder without precision steering,
     // especially with a thumb on landscape phones.
-    Math.abs(x - rack(s)) < 104 && y > s.top + 0.1 && y <= STOOL_Y + 28
+    // A rat standing anywhere on the actual stool can reach the ladder with
+    // one deliberate Jump tap. A narrow x-only threshold stranded thumb users
+    // on the stool's right side even though they were on valid platform art.
+    (Math.abs(x - rack(s)) < 104 ||
+      (y >= STOOL_Y - 10 &&
+        x >= stool(s) - 71 && x <= stool(s) + 71)) &&
+    y > s.top + 0.1 && y <= STOOL_Y + 28
   );
 }
 export interface Slab {
