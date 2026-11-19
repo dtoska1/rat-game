@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite';
 
-// Relative paths work on Cloudflare or at a nested GitHub Pages URL.
+// Keep asset URLs relative for GitHub Pages /rat-game/ and local previews.
 export default defineConfig({
   base: './',
   plugins: [],
