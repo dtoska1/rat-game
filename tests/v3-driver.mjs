@@ -23,12 +23,11 @@ export async function openGame(view = 'desktop', engine = chromium, options = {}
     isMobile: view !== 'desktop',
     deviceScaleFactor: view === 'promax' ? 3 : 1,
   });
-  // Existing camera and landscape playthrough regressions must continue
-  // exercising their historical viewports. The portrait gate is tested
-  // separately with enforcePortrait: true in v3-portrait-gate.mjs.
-  if (!options.enforcePortrait) {
+  // Legacy viewport/layout tests also cover portrait; they bypass the mobile
+  // orientation restriction. The landscape-only gate has dedicated tests.
+  if (!options.enforceOrientation) {
     await context.addInitScript(() => {
-      window.__ratPlaytestAllowLandscape = true;
+      window.__ratPlaytestBypassOrientationGate = true;
     });
   }
   const page = await context.newPage(),
