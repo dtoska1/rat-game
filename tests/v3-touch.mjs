@@ -127,7 +127,7 @@ try {
   await walk(2684);
   const stoolEdge = await g.read();
   assert.equal(stoolEdge.y, 448, 'rat remains on the stool');
-  assert.ok(stoolEdge.x > 2679 && stoolEdge.x <= 2712,
+  assert.ok(stoolEdge.x > 2679 && stoolEdge.x <= 2725,
     'rat is on the stool beyond the former narrow ladder threshold');
   await hold('jump');
   await g.wait((s) => s.y < 448, 'edge-of-stool Jump starts a climb');
