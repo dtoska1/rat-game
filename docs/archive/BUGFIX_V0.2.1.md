@@ -1,3 +1,5 @@
+> Archived V0.x project note; paths below are relative to the repository root. Retained for project history.
+
 # Rat Game 0.2.1 — Replay controls fix
 
 ## Reproduction

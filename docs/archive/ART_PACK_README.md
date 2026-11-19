@@ -1,3 +1,5 @@
+> Archived V0.x project note; paths below are relative to the repository root. Retained for project history.
+
 # Rat Game — Visual reference pack (2 Nov 2026)
 
 This pack contains concept artwork and a production asset checklist to continue the design in a consistent style.

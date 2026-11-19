@@ -1,3 +1,5 @@
+> Archived V0.x project note; paths below are relative to the repository root. Retained for project history.
+
 # Rat Game v0.2 — blank stage fix
 
 **Symptoms**: Header/HUD and controls render; room, food, chef and rat do not.
